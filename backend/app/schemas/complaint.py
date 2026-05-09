@@ -2,6 +2,8 @@ from pydantic import BaseModel
 from uuid import UUID
 from datetime import datetime
 
+from app.schemas.rating import RatingResponse
+
 
 class ComplaintResponse(BaseModel):
     id: UUID
@@ -27,6 +29,7 @@ class ComplaintResponse(BaseModel):
     resolved_at: datetime | None = None
     student: "UserBrief | None" = None
     assigned_staff: "UserBrief | None" = None
+    rating: "RatingResponse | None" = None
 
     model_config = {"from_attributes": True}
 

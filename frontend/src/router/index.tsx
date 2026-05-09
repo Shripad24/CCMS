@@ -18,6 +18,8 @@ import SLAManagement from "@/pages/admin/SLAManagement";
 import EscalatedComplaints from "@/pages/admin/EscalatedComplaints";
 import Reports from "@/pages/admin/Reports";
 
+import ProfilePage from "@/pages/auth/ProfilePage";
+
 export const router = createBrowserRouter([
   { path: "/login", element: <LoginPage /> },
   { path: "/register", element: <RegisterPage /> },
@@ -26,6 +28,7 @@ export const router = createBrowserRouter([
     element: <ProtectedRoute><Layout /></ProtectedRoute>,
     children: [
       { index: true, element: <RoleRedirect /> },
+      { path: "profile", element: <ProfilePage /> },
       // Student
       { path: "student/dashboard", element: <ProtectedRoute allowedRoles={["STUDENT"]}><StudentDashboard /></ProtectedRoute> },
       { path: "student/complaints/new", element: <ProtectedRoute allowedRoles={["STUDENT"]}><SubmitComplaint /></ProtectedRoute> },

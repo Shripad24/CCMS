@@ -7,7 +7,7 @@ import { useAuthStore } from "@/store/authStore";
 import { StatusBadge, PriorityBadge } from "@/components/shared/StatusBadge";
 import { SLACountdown } from "@/components/shared/SLACountdown";
 import { AICategoryBadge } from "@/components/shared/AICategoryBadge";
-import { Loader2, Send, Sparkles, ChevronDown, ChevronUp, Paperclip } from "lucide-react";
+import { Loader2, Send, Sparkles, ChevronDown, ChevronUp, Paperclip, Star } from "lucide-react";
 import { formatDistanceToNow, format } from "date-fns";
 import { toast } from "sonner";
 
@@ -27,6 +27,7 @@ export default function ComplaintDetail() {
   const [showAI, setShowAI] = useState(false);
   const [newStatus, setNewStatus] = useState("");
   const [statusMessage, setStatusMessage] = useState("");
+  const [statusFile, setStatusFile] = useState<File | null>(null);
 
   const { data: complaintData, isLoading } = useQuery({ queryKey: ["complaint", id], queryFn: () => complaintsApi.getOne(id!), enabled: !!id });
   const { data: updatesData } = useQuery({ queryKey: ["complaint-updates", id], queryFn: () => complaintsApi.getUpdates(id!), enabled: !!id });
@@ -35,10 +36,10 @@ export default function ComplaintDetail() {
   const sendMutation = useMutation({ mutationFn: () => messagesApi.sendMessage(id!, message), onSuccess: () => { setMessage(""); refetchMessages(); } });
 
   const statusMutation = useMutation({
-    mutationFn: () => complaintsApi.updateStatus(id!, { new_status: newStatus, message: statusMessage || undefined }),
+    mutationFn: () => complaintsApi.updateStatus(id!, { new_status: newStatus, message: statusMessage || undefined, file: statusFile }),
     onSuccess: () => {
       toast.success("Status updated!");
-      setNewStatus(""); setStatusMessage("");
+      setNewStatus(""); setStatusMessage(""); setStatusFile(null);
       queryClient.invalidateQueries({ queryKey: ["complaint", id] });
       queryClient.invalidateQueries({ queryKey: ["complaint-updates", id] });
     },
@@ -67,13 +68,38 @@ export default function ComplaintDetail() {
             </div>
             <h1 className="font-outfit text-xl font-bold text-slate-100">{complaint.title}</h1>
           </div>
-          <SLACountdown deadline={complaint.sla_deadline} warningSent={complaint.sla_warning_sent} />
+          <SLACountdown deadline={complaint.sla_deadline} warningSent={complaint.sla_warning_sent} status={complaint.status} resolvedAt={complaint.resolved_at} />
         </div>
         <p className="text-slate-300 whitespace-pre-wrap mb-4">{complaint.description}</p>
         {complaint.attachment_url && (
-          <a href={complaint.attachment_url} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1.5 text-sm text-primary-400 hover:text-primary-300">
-            <Paperclip className="w-4 h-4" /> View Attachment
-          </a>
+          <div className="mt-3 mb-2">
+            <p className="text-xs text-slate-400 mb-2 font-medium uppercase tracking-wider">Student Attachment</p>
+            {/\.(jpg|jpeg|png|gif|webp|bmp|svg)$/i.test(complaint.attachment_url) ? (
+              <div className="rounded-lg overflow-hidden border border-slate-700/50 bg-dark-700/50 max-w-md">
+                <a href={complaint.attachment_url} target="_blank" rel="noopener noreferrer">
+                  <img src={complaint.attachment_url} alt="Complaint attachment" className="w-full max-h-80 object-contain" />
+                </a>
+                <div className="px-3 py-2 flex items-center justify-between border-t border-slate-700/50">
+                  <span className="text-xs text-slate-400 truncate">Uploaded image</span>
+                  <a href={complaint.attachment_url} target="_blank" rel="noopener noreferrer" className="text-xs text-primary-400 hover:text-primary-300 flex items-center gap-1">
+                    <Paperclip className="w-3 h-3" /> Open full size
+                  </a>
+                </div>
+              </div>
+            ) : (
+              <a href={complaint.attachment_url} target="_blank" rel="noopener noreferrer"
+                className="flex items-center gap-3 p-3 rounded-lg border border-slate-700/50 bg-dark-700/50 hover:bg-dark-600/50 transition-colors max-w-md">
+                <div className="w-10 h-10 rounded-lg bg-primary-500/10 flex items-center justify-center flex-shrink-0">
+                  <Paperclip className="w-5 h-5 text-primary-400" />
+                </div>
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm text-slate-200 font-medium">Attached File</p>
+                  <p className="text-xs text-slate-400 truncate">{complaint.attachment_url.split('/').pop()}</p>
+                </div>
+                <span className="text-xs text-primary-400 flex-shrink-0">View →</span>
+              </a>
+            )}
+          </div>
         )}
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mt-4 pt-4 border-t border-slate-700/30">
           <div><p className="text-xs text-slate-400">Student</p><p className="text-sm text-slate-200">{complaint.student?.full_name || "—"}</p></div>
@@ -93,8 +119,15 @@ export default function ComplaintDetail() {
               {availableStatuses.map((s) => <option key={s} value={s}>{s.replace("_", " ")}</option>)}
             </select>
             <textarea value={statusMessage} onChange={(e) => setStatusMessage(e.target.value)} className="input-field min-h-[80px] resize-y" placeholder="Add a note (optional)" />
+            <div className="flex items-center gap-3">
+              <label className="btn-secondary flex-1 cursor-pointer flex justify-center gap-2">
+                <Paperclip className="w-4 h-4" /> {statusFile ? statusFile.name : "Attach File (optional)"}
+                <input type="file" className="hidden" onChange={(e) => setStatusFile(e.target.files?.[0] || null)} accept="image/*,.pdf,.doc,.docx" />
+              </label>
+              {statusFile && <button onClick={() => setStatusFile(null)} className="text-red-400 hover:text-red-300 text-sm">Remove</button>}
+            </div>
             <button onClick={() => newStatus && statusMutation.mutate()} disabled={!newStatus || statusMutation.isPending}
-              className="btn-primary disabled:opacity-50">
+              className="btn-primary disabled:opacity-50 mt-2">
               {statusMutation.isPending ? "Updating..." : "Update Status"}
             </button>
           </div>
@@ -131,13 +164,39 @@ export default function ComplaintDetail() {
               <div className="flex flex-col items-center"><div className="w-3 h-3 rounded-full bg-primary-500 mt-1.5" />{i < updates.length - 1 && <div className="w-0.5 flex-1 bg-slate-700 mt-1" />}</div>
               <div className="flex-1 pb-4">
                 <div className="flex items-center gap-2 mb-1">{u.new_status && <StatusBadge status={u.new_status} />}<span className="text-xs text-slate-500">{formatDistanceToNow(new Date(u.created_at), { addSuffix: true })}</span></div>
-                {u.message && <p className="text-sm text-slate-300">{u.message}</p>}
+                {u.message && <p className="text-sm text-slate-300 mb-1">{u.message}</p>}
+                {u.attachment_url && (
+                  <a href={u.attachment_url} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1 text-xs text-primary-400 hover:text-primary-300 bg-primary-500/10 px-2 py-1 rounded">
+                    <Paperclip className="w-3 h-3" /> View attached file
+                  </a>
+                )}
                 {u.author && <p className="text-xs text-slate-500 mt-1">by {u.author.full_name}</p>}
               </div>
             </div>
           ))}
         </div>
       </div>
+
+      {/* Rating & Feedback */}
+      {complaint.rating && (
+        <div className="glass-card p-6 border-yellow-500/20">
+          <h3 className="font-outfit font-semibold text-slate-200 mb-4 flex items-center gap-2">
+            <Star className="w-5 h-5 text-yellow-400 fill-yellow-400" />
+            Student Feedback
+          </h3>
+          <div className="flex items-center gap-1 mb-3">
+            {[1, 2, 3, 4, 5].map((star) => (
+              <Star key={star} className={`w-5 h-5 ${star <= complaint.rating.score ? "text-yellow-400 fill-yellow-400" : "text-slate-600"}`} />
+            ))}
+            <span className="ml-2 text-slate-300 font-medium">{complaint.rating.score} / 5</span>
+          </div>
+          {complaint.rating.feedback_text ? (
+            <p className="text-slate-300 bg-dark-700/50 p-4 rounded-lg italic">"{complaint.rating.feedback_text}"</p>
+          ) : (
+            <p className="text-slate-500 italic">No additional feedback provided.</p>
+          )}
+        </div>
+      )}
 
       {/* Messages */}
       <div className="glass-card p-6">

@@ -37,9 +37,9 @@ export function Sidebar({ open, onClose }: SidebarProps) {
   return (
     <>
       {open && <div className="fixed inset-0 bg-black/50 z-40 lg:hidden" onClick={onClose} />}
-      <aside className={`fixed lg:static inset-y-0 left-0 z-50 w-64 bg-dark-800 border-r border-slate-700/50 transform transition-transform duration-300 ease-in-out ${open ? "translate-x-0" : "-translate-x-full"} lg:translate-x-0`}>
+      <aside className={`fixed lg:static inset-y-0 left-0 z-50 w-64 bg-slate-900/60 backdrop-blur-xl border-r border-white/5 transform transition-transform duration-300 ease-in-out ${open ? "translate-x-0" : "-translate-x-full"} lg:translate-x-0 shadow-2xl`}>
         <div className="flex items-center justify-between p-4 lg:hidden">
-          <span className="font-outfit font-semibold text-lg gradient-text">CCMS</span>
+          <img src="/logo.png" alt="CCMS Logo" className="h-6 w-auto rounded object-contain bg-dark-800" />
           <button onClick={onClose} className="p-2 rounded-lg hover:bg-dark-700"><X className="w-5 h-5 text-slate-400" /></button>
         </div>
         <div className="hidden lg:block p-6 border-b border-slate-700/50">

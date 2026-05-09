@@ -30,11 +30,16 @@ export default function StaffDashboard() {
     return remaining / total < 0.2;
   });
 
+  const ratedComplaints = complaints.filter((c: any) => c.rating);
+  const avgRating = ratedComplaints.length > 0
+    ? (ratedComplaints.reduce((acc: number, c: any) => acc + c.rating.score, 0) / ratedComplaints.length).toFixed(1)
+    : "—";
+
   const metrics = [
     { label: "Assigned", value: assigned, icon: FileText, color: "text-primary-400", bg: "bg-primary-500/10" },
     { label: "In Progress", value: inProgress, icon: Clock, color: "text-amber-400", bg: "bg-amber-500/10" },
     { label: "Resolved (Month)", value: resolvedThisMonth, icon: CheckCircle2, color: "text-emerald-400", bg: "bg-emerald-500/10" },
-    { label: "Avg Rating", value: "—", icon: Star, color: "text-yellow-400", bg: "bg-yellow-500/10" },
+    { label: "Avg Rating", value: avgRating, icon: Star, color: "text-yellow-400", bg: "bg-yellow-500/10" },
   ];
 
   if (isLoading) return <div className="flex items-center justify-center h-64"><Loader2 className="w-8 h-8 text-primary-400 animate-spin" /></div>;
@@ -43,8 +48,8 @@ export default function StaffDashboard() {
     <div className="space-y-6">
       <h1 className="font-outfit text-2xl font-bold text-slate-100">Welcome, {user?.full_name?.split(" ")[0]}!</h1>
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        {metrics.map((m) => (
-          <div key={m.label} className="glass-card p-5">
+        {metrics.map((m, index) => (
+          <div key={m.label} className={`glass-card p-5 slide-up stagger-${index + 1}`}>
             <div className="flex items-center justify-between">
               <div><p className="text-sm text-slate-400">{m.label}</p><p className="text-2xl font-outfit font-bold text-slate-100 mt-1">{m.value}</p></div>
               <div className={`w-10 h-10 ${m.bg} rounded-lg flex items-center justify-center`}><m.icon className={`w-5 h-5 ${m.color}`} /></div>
@@ -59,7 +64,7 @@ export default function StaffDashboard() {
           {urgentComplaints.map((c: any) => (
             <div key={c.id} onClick={() => navigate(`/staff/complaints/${c.id}`)} className="flex items-center justify-between py-2 border-b border-slate-700/30 last:border-0 cursor-pointer hover:bg-dark-700/30 px-2 rounded">
               <div><span className="text-sm text-slate-300 font-mono">{c.reference_no}</span> <span className="text-sm text-slate-400 ml-2">{c.title}</span></div>
-              <SLACountdown deadline={c.sla_deadline} warningSent={true} />
+              <SLACountdown deadline={c.sla_deadline} warningSent={true} status={c.status} resolvedAt={c.resolved_at} />
             </div>
           ))}
         </div>
@@ -86,7 +91,7 @@ export default function StaffDashboard() {
                   <td className="px-4 py-3 text-sm text-slate-200 truncate max-w-[200px]">{c.title}</td>
                   <td className="px-4 py-3"><StatusBadge status={c.status} /></td>
                   <td className="px-4 py-3"><PriorityBadge priority={c.priority} /></td>
-                  <td className="px-4 py-3"><SLACountdown deadline={c.sla_deadline} warningSent={c.sla_warning_sent} /></td>
+                  <td className="px-4 py-3"><SLACountdown deadline={c.sla_deadline} warningSent={c.sla_warning_sent} status={c.status} resolvedAt={c.resolved_at} /></td>
                 </tr>
               ))}
               {complaints.length === 0 && <tr><td colSpan={5} className="px-4 py-8 text-center text-slate-500">No assigned complaints</td></tr>}

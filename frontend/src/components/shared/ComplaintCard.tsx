@@ -27,7 +27,7 @@ export function ComplaintCard({ complaint }: { complaint: Complaint }) {
         </div>
         <div className="flex flex-col items-end gap-1 flex-shrink-0">
           <PriorityBadge priority={complaint.priority} />
-          <SLACountdown deadline={complaint.sla_deadline} warningSent={complaint.sla_warning_sent} />
+          <SLACountdown deadline={complaint.sla_deadline} warningSent={complaint.sla_warning_sent} status={complaint.status} resolvedAt={complaint.resolved_at} />
         </div>
       </div>
       <div className="flex items-center justify-between mt-3 pt-3 border-t border-slate-700/30">

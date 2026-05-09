@@ -33,6 +33,8 @@ export default function AssignedComplaints() {
           <option value="PENDING_INFO">Pending Info</option>
           <option value="ESCALATED">Escalated</option>
           <option value="RESOLVED">Resolved</option>
+          <option value="CLOSED">Closed</option>
+          <option value="REJECTED">Rejected</option>
         </select>
       </div>
 
@@ -56,7 +58,7 @@ export default function AssignedComplaints() {
                   <td className="px-4 py-3 text-sm text-slate-300">{c.student?.full_name || "—"}</td>
                   <td className="px-4 py-3"><StatusBadge status={c.status} /></td>
                   <td className="px-4 py-3"><PriorityBadge priority={c.priority} /></td>
-                  <td className="px-4 py-3"><SLACountdown deadline={c.sla_deadline} warningSent={c.sla_warning_sent} /></td>
+                  <td className="px-4 py-3"><SLACountdown deadline={c.sla_deadline} warningSent={c.sla_warning_sent} status={c.status} resolvedAt={c.resolved_at} /></td>
                   <td className="px-4 py-3 text-sm text-slate-400">{formatDistanceToNow(new Date(c.created_at), { addSuffix: true })}</td>
                 </tr>
               ))}

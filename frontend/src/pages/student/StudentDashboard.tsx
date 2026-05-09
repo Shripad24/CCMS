@@ -56,8 +56,8 @@ export default function StudentDashboard() {
       </div>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        {metrics.map((m) => (
-          <div key={m.label} className="glass-card p-5">
+        {metrics.map((m, index) => (
+          <div key={m.label} className={`glass-card p-5 slide-up stagger-${index + 1}`}>
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm text-slate-400">{m.label}</p>
@@ -80,7 +80,7 @@ export default function StudentDashboard() {
           {slaWarnings.map((c: any) => (
             <div key={c.id} className="flex items-center justify-between py-2 border-b border-slate-700/30 last:border-0">
               <span className="text-sm text-slate-300">{c.reference_no}: {c.title}</span>
-              <SLACountdown deadline={c.sla_deadline} warningSent={c.sla_warning_sent} />
+              <SLACountdown deadline={c.sla_deadline} warningSent={c.sla_warning_sent} status={c.status} resolvedAt={c.resolved_at} />
             </div>
           ))}
         </div>
@@ -111,7 +111,7 @@ export default function StudentDashboard() {
                   <td className="px-4 py-3 text-sm text-slate-200 max-w-[200px] truncate">{c.title}</td>
                   <td className="px-4 py-3"><StatusBadge status={c.status} /></td>
                   <td className="px-4 py-3"><PriorityBadge priority={c.priority} /></td>
-                  <td className="px-4 py-3"><SLACountdown deadline={c.sla_deadline} /></td>
+                  <td className="px-4 py-3"><SLACountdown deadline={c.sla_deadline} status={c.status} resolvedAt={c.resolved_at} /></td>
                   <td className="px-4 py-3 text-sm text-slate-400">{formatDistanceToNow(new Date(c.created_at), { addSuffix: true })}</td>
                 </tr>
               ))}

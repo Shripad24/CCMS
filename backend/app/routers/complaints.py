@@ -160,6 +160,9 @@ async def list_complaints(
         if c.assigned_staff_id:
             staff_result = await db.execute(select(User).where(User.id == c.assigned_staff_id))
             staff = staff_result.scalar_one_or_none()
+            
+        rating_result = await db.execute(select(Rating).where(Rating.complaint_id == c.id))
+        rating = rating_result.scalar_one_or_none()
 
         items.append({
             "id": str(c.id), "reference_no": c.reference_no, "title": c.title,
@@ -178,6 +181,15 @@ async def list_complaints(
             "resolved_at": c.resolved_at.isoformat() if c.resolved_at else None,
             "student": {"id": str(student.id), "full_name": student.full_name, "email": student.email, "role": student.role.value} if student else None,
             "assigned_staff": {"id": str(staff.id), "full_name": staff.full_name, "email": staff.email, "role": staff.role.value} if staff else None,
+            "rating": {
+                "id": str(rating.id),
+                "complaint_id": str(rating.complaint_id),
+                "student_id": str(rating.student_id),
+                "staff_id": str(rating.staff_id),
+                "score": rating.score,
+                "feedback_text": rating.feedback_text,
+                "created_at": rating.created_at.isoformat()
+            } if rating else None,
         })
 
     return {
@@ -211,6 +223,9 @@ async def get_complaint(
     if complaint.assigned_staff_id:
         staff_result = await db.execute(select(User).where(User.id == complaint.assigned_staff_id))
         staff = staff_result.scalar_one_or_none()
+        
+    rating_result = await db.execute(select(Rating).where(Rating.complaint_id == complaint.id))
+    rating = rating_result.scalar_one_or_none()
 
     return {
         "id": str(complaint.id), "reference_no": complaint.reference_no,
@@ -230,13 +245,24 @@ async def get_complaint(
         "resolved_at": complaint.resolved_at.isoformat() if complaint.resolved_at else None,
         "student": {"id": str(student.id), "full_name": student.full_name, "email": student.email, "role": student.role.value} if student else None,
         "assigned_staff": {"id": str(staff.id), "full_name": staff.full_name, "email": staff.email, "role": staff.role.value} if staff else None,
+        "rating": {
+            "id": str(rating.id),
+            "complaint_id": str(rating.complaint_id),
+            "student_id": str(rating.student_id),
+            "staff_id": str(rating.staff_id),
+            "score": rating.score,
+            "feedback_text": rating.feedback_text,
+            "created_at": rating.created_at.isoformat()
+        } if rating else None,
     }
 
 
 @router.patch("/{complaint_id}/status")
 async def update_complaint_status(
     complaint_id: str,
-    body: StatusUpdateRequest,
+    new_status: str = Form(...),
+    message: str | None = Form(None),
+    file: UploadFile | None = File(None),
     current_user: User = Depends(require_role("STAFF", "ADMIN")),
     db: AsyncSession = Depends(get_db),
 ):
@@ -247,40 +273,53 @@ async def update_complaint_status(
         raise HTTPException(status_code=404, detail="Complaint not found")
 
     current_status = complaint.status.value
-    if not validate_status_transition(current_status, body.new_status):
-        raise HTTPException(status_code=400, detail=f"Cannot transition from {current_status} to {body.new_status}")
+    if not validate_status_transition(current_status, new_status):
+        raise HTTPException(status_code=400, detail=f"Cannot transition from {current_status} to {new_status}")
 
     # Handle SLA pause/resume
     now = datetime.now(timezone.utc)
-    if body.new_status == "PENDING_INFO":
+    if new_status == "PENDING_INFO":
         complaint.sla_paused_at = now
     elif current_status == "PENDING_INFO" and complaint.sla_paused_at:
         paused_delta = (now - complaint.sla_paused_at).total_seconds() / 60
         complaint.sla_paused_duration_minutes = (complaint.sla_paused_duration_minutes or 0) + int(paused_delta)
         complaint.sla_paused_at = None
 
-    complaint.status = ComplaintStatus(body.new_status)
+    complaint.status = ComplaintStatus(new_status)
     complaint.updated_at = now
 
-    if body.new_status == "RESOLVED":
+    if new_status == "RESOLVED":
         complaint.resolved_at = now
+
+    # Save file if provided
+    attachment_url = None
+    if file and file.filename:
+        ext = os.path.splitext(file.filename)[1]
+        filename = f"{uuid.uuid4()}{ext}"
+        filepath = os.path.join(UPLOAD_DIR, filename)
+        content = await file.read()
+        if len(content) > 10 * 1024 * 1024:
+            raise HTTPException(status_code=400, detail="File too large (max 10MB)")
+        with open(filepath, "wb") as f:
+            f.write(content)
+        attachment_url = f"/uploads/{filename}"
 
     update = ComplaintUpdate(
         complaint_id=complaint.id, author_id=current_user.id,
         update_type=UpdateType.STATUS_CHANGE,
-        previous_status=current_status, new_status=body.new_status,
-        message=body.message,
+        previous_status=current_status, new_status=new_status,
+        message=message, attachment_url=attachment_url,
     )
     db.add(update)
 
     try:
-        await notify_status_changed(db, complaint, body.new_status)
-        if body.new_status == "RESOLVED":
+        await notify_status_changed(db, complaint, new_status)
+        if new_status == "RESOLVED":
             await notify_resolved(db, complaint)
     except Exception as e:
         logger.error(f"Notification error: {e}")
 
-    return {"message": "Status updated", "new_status": body.new_status}
+    return {"message": "Status updated", "new_status": new_status, "attachment_url": attachment_url}
 
 
 @router.patch("/{complaint_id}/assign")

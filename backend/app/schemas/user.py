@@ -30,3 +30,9 @@ class UserUpdateRequest(BaseModel):
     role: str | None = None
     department_id: UUID | None = None
     is_active: bool | None = None
+
+class ProfileUpdateRequest(BaseModel):
+    full_name: str | None = None
+    profile_photo_url: str | None = None
+    current_password: str | None = None
+    new_password: str | None = None

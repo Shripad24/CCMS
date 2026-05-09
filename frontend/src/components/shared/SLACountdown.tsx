@@ -1,17 +1,36 @@
 import { useState, useEffect } from "react";
-import { Clock, AlertTriangle } from "lucide-react";
+import { Clock, AlertTriangle, CheckCircle2 } from "lucide-react";
 
 interface SLACountdownProps {
   deadline: string | null;
   warningSent?: boolean;
+  status?: string;
+  resolvedAt?: string | null;
 }
 
-export function SLACountdown({ deadline, warningSent }: SLACountdownProps) {
+export function SLACountdown({ deadline, warningSent, status, resolvedAt }: SLACountdownProps) {
   const [remaining, setRemaining] = useState<string>("");
-  const [urgency, setUrgency] = useState<"normal" | "warning" | "breached">("normal");
+  const [urgency, setUrgency] = useState<"normal" | "warning" | "breached" | "completed">("normal");
 
   useEffect(() => {
     if (!deadline) return;
+
+    if (status === "RESOLVED" || status === "CLOSED") {
+      const end = new Date(deadline).getTime();
+      const resolved = resolvedAt ? new Date(resolvedAt).getTime() : new Date().getTime(); // fallback if resolvedAt is missing but status is resolved
+      
+      if (resolved <= end) {
+        setRemaining("Completed Early");
+        setUrgency("completed");
+      } else {
+        const overdue = resolved - end;
+        const hours = Math.floor(overdue / (1000 * 60 * 60));
+        const minutes = Math.floor((overdue % (1000 * 60 * 60)) / (1000 * 60));
+        setRemaining(`Resolved Late (${hours}h ${minutes}m overdue)`);
+        setUrgency("breached");
+      }
+      return;
+    }
 
     const update = () => {
       const now = new Date().getTime();
@@ -40,9 +59,8 @@ export function SLACountdown({ deadline, warningSent }: SLACountdownProps) {
       }
 
       // Warning at 20% remaining or if warning was sent
-      const total = end - (end - diff);
-      const pct = diff / (end - (now - diff)) || 1;
-      if (warningSent || pct < 0.2) {
+      // Since we don't have created_at here, we'll just use 24h as a rough estimate for pct, or just rely on warningSent
+      if (warningSent || (days === 0 && hours < 24)) {
         setUrgency("warning");
       } else {
         setUrgency("normal");
@@ -52,7 +70,7 @@ export function SLACountdown({ deadline, warningSent }: SLACountdownProps) {
     update();
     const interval = setInterval(update, 60000);
     return () => clearInterval(interval);
-  }, [deadline, warningSent]);
+  }, [deadline, warningSent, status, resolvedAt]);
 
   if (!deadline) return <span className="text-xs text-slate-500">No SLA</span>;
 
@@ -60,11 +78,14 @@ export function SLACountdown({ deadline, warningSent }: SLACountdownProps) {
     normal: "text-emerald-400",
     warning: "text-amber-400",
     breached: "text-red-400",
+    completed: "text-blue-400",
   };
 
   return (
     <span className={`inline-flex items-center gap-1 text-xs font-medium ${colors[urgency]}`}>
-      {urgency === "breached" ? <AlertTriangle className="w-3 h-3" /> : <Clock className="w-3 h-3" />}
+      {urgency === "completed" ? <CheckCircle2 className="w-3 h-3" /> :
+       urgency === "breached" && status !== "RESOLVED" && status !== "CLOSED" ? <AlertTriangle className="w-3 h-3" /> : 
+       <Clock className="w-3 h-3" />}
       {remaining}
     </span>
   );

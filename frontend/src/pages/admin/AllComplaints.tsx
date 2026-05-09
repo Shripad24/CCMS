@@ -73,7 +73,7 @@ export default function AllComplaints() {
                     <td className="px-4 py-3 text-sm text-slate-300">{c.assigned_staff?.full_name || "—"}</td>
                     <td className="px-4 py-3"><StatusBadge status={c.status} /></td>
                     <td className="px-4 py-3"><PriorityBadge priority={c.priority} /></td>
-                    <td className="px-4 py-3"><SLACountdown deadline={c.sla_deadline} /></td>
+                    <td className="px-4 py-3"><SLACountdown deadline={c.sla_deadline} status={c.status} resolvedAt={c.resolved_at} /></td>
                     <td className="px-4 py-3">
                       <button onClick={() => setAssignModal(c.id)} className="text-xs text-primary-400 hover:text-primary-300 flex items-center gap-1">
                         <UserPlus className="w-3 h-3" /> Assign

@@ -76,14 +76,38 @@ export default function ComplaintDetail() {
             </div>
             <h1 className="font-outfit text-xl font-bold text-slate-100">{complaint.title}</h1>
           </div>
-          <SLACountdown deadline={complaint.sla_deadline} warningSent={complaint.sla_warning_sent} />
+          <SLACountdown deadline={complaint.sla_deadline} warningSent={complaint.sla_warning_sent} status={complaint.status} resolvedAt={complaint.resolved_at} />
         </div>
         <p className="text-slate-300 whitespace-pre-wrap mb-4">{complaint.description}</p>
         {complaint.attachment_url && (
-          <a href={complaint.attachment_url} target="_blank" rel="noopener noreferrer"
-            className="inline-flex items-center gap-1.5 text-sm text-primary-400 hover:text-primary-300">
-            <Paperclip className="w-4 h-4" /> View Attachment
-          </a>
+          <div className="mt-3 mb-2">
+            <p className="text-xs text-slate-400 mb-2 font-medium uppercase tracking-wider">Attachment</p>
+            {/\.(jpg|jpeg|png|gif|webp|bmp|svg)$/i.test(complaint.attachment_url) ? (
+              <div className="rounded-lg overflow-hidden border border-slate-700/50 bg-dark-700/50 max-w-md">
+                <a href={complaint.attachment_url} target="_blank" rel="noopener noreferrer">
+                  <img src={complaint.attachment_url} alt="Complaint attachment" className="w-full max-h-80 object-contain" />
+                </a>
+                <div className="px-3 py-2 flex items-center justify-between border-t border-slate-700/50">
+                  <span className="text-xs text-slate-400 truncate">Uploaded image</span>
+                  <a href={complaint.attachment_url} target="_blank" rel="noopener noreferrer" className="text-xs text-primary-400 hover:text-primary-300 flex items-center gap-1">
+                    <Paperclip className="w-3 h-3" /> Open full size
+                  </a>
+                </div>
+              </div>
+            ) : (
+              <a href={complaint.attachment_url} target="_blank" rel="noopener noreferrer"
+                className="flex items-center gap-3 p-3 rounded-lg border border-slate-700/50 bg-dark-700/50 hover:bg-dark-600/50 transition-colors max-w-md">
+                <div className="w-10 h-10 rounded-lg bg-primary-500/10 flex items-center justify-center flex-shrink-0">
+                  <Paperclip className="w-5 h-5 text-primary-400" />
+                </div>
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm text-slate-200 font-medium">Attached File</p>
+                  <p className="text-xs text-slate-400 truncate">{complaint.attachment_url.split('/').pop()}</p>
+                </div>
+                <span className="text-xs text-primary-400 flex-shrink-0">View →</span>
+              </a>
+            )}
+          </div>
         )}
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mt-4 pt-4 border-t border-slate-700/30">
           <div><p className="text-xs text-slate-400">Category</p><p className="text-sm text-slate-200">{complaint.category || "N/A"}</p></div>
@@ -141,7 +165,12 @@ export default function ComplaintDetail() {
                   {u.new_status && <StatusBadge status={u.new_status} />}
                   <span className="text-xs text-slate-500">{formatDistanceToNow(new Date(u.created_at), { addSuffix: true })}</span>
                 </div>
-                {u.message && <p className="text-sm text-slate-300">{u.message}</p>}
+                {u.message && <p className="text-sm text-slate-300 mb-1">{u.message}</p>}
+                {u.attachment_url && (
+                  <a href={u.attachment_url} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1 text-xs text-primary-400 hover:text-primary-300 bg-primary-500/10 px-2 py-1 rounded">
+                    <Paperclip className="w-3 h-3" /> View attached file
+                  </a>
+                )}
                 {u.author && <p className="text-xs text-slate-500 mt-1">by {u.author.full_name}</p>}
               </div>
             </div>

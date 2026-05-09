@@ -32,8 +32,8 @@ export default function AdminDashboard() {
       <h1 className="font-outfit text-2xl font-bold text-slate-100">Admin Dashboard</h1>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        {metrics.map((m) => (
-          <div key={m.label} className="glass-card p-5">
+        {metrics.map((m, i) => (
+          <div key={m.label} className={`glass-card p-5 slide-up stagger-${(i % 5) + 1}`}>
             <div className="flex items-center justify-between">
               <div><p className="text-sm text-slate-400">{m.label}</p><p className="text-2xl font-outfit font-bold text-slate-100 mt-1">{m.value}</p></div>
               <div className={`w-10 h-10 ${m.bg} rounded-lg flex items-center justify-center`}><m.icon className={`w-5 h-5 ${m.color}`} /></div>

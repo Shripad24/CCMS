@@ -71,7 +71,7 @@ export default function MyComplaints() {
                     <td className="px-4 py-3"><AICategoryBadge category={c.category} confidence={c.ai_confidence} /></td>
                     <td className="px-4 py-3"><PriorityBadge priority={c.priority} /></td>
                     <td className="px-4 py-3"><StatusBadge status={c.status} /></td>
-                    <td className="px-4 py-3"><SLACountdown deadline={c.sla_deadline} warningSent={c.sla_warning_sent} /></td>
+                    <td className="px-4 py-3"><SLACountdown deadline={c.sla_deadline} warningSent={c.sla_warning_sent} status={c.status} resolvedAt={c.resolved_at} /></td>
                     <td className="px-4 py-3 text-sm text-slate-400">{formatDistanceToNow(new Date(c.created_at), { addSuffix: true })}</td>
                   </tr>
                 ))}
