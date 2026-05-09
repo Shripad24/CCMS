@@ -2,12 +2,13 @@ import { useState } from "react";
 import { useParams } from "react-router-dom";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { complaintsApi } from "@/api/complaints";
+import { adminApi } from "@/api/admin";
 import { messagesApi } from "@/api/messages";
 import { useAuthStore } from "@/store/authStore";
 import { StatusBadge, PriorityBadge } from "@/components/shared/StatusBadge";
 import { SLACountdown } from "@/components/shared/SLACountdown";
 import { AICategoryBadge } from "@/components/shared/AICategoryBadge";
-import { Loader2, Send, Sparkles, ChevronDown, ChevronUp, Paperclip, Star } from "lucide-react";
+import { Loader2, Send, Sparkles, ChevronDown, ChevronUp, Paperclip, Star, UserPlus } from "lucide-react";
 import { formatDistanceToNow, format } from "date-fns";
 import { toast } from "sonner";
 
@@ -16,7 +17,7 @@ const STATUS_OPTIONS: Record<string, string[]> = {
   IN_PROGRESS: ["PENDING_INFO", "RESOLVED", "ESCALATED"],
   PENDING_INFO: ["IN_PROGRESS", "RESOLVED"],
   ESCALATED: ["IN_PROGRESS", "ASSIGNED", "RESOLVED"],
-  SUBMITTED: ["ASSIGNED", "REJECTED"],
+  SUBMITTED: ["REJECTED"],
 };
 
 export default function ComplaintDetail() {
@@ -24,14 +25,21 @@ export default function ComplaintDetail() {
   const user = useAuthStore((s) => s.user);
   const queryClient = useQueryClient();
   const [message, setMessage] = useState("");
-  const [showAI, setShowAI] = useState(false);
+  const [showAI, setShowAI] = useState(true);
   const [newStatus, setNewStatus] = useState("");
   const [statusMessage, setStatusMessage] = useState("");
   const [statusFile, setStatusFile] = useState<File | null>(null);
+  const [selectedStaff, setSelectedStaff] = useState("");
+  const [assignNote, setAssignNote] = useState("");
 
   const { data: complaintData, isLoading } = useQuery({ queryKey: ["complaint", id], queryFn: () => complaintsApi.getOne(id!), enabled: !!id });
   const { data: updatesData } = useQuery({ queryKey: ["complaint-updates", id], queryFn: () => complaintsApi.getUpdates(id!), enabled: !!id });
   const { data: messagesData, refetch: refetchMessages } = useQuery({ queryKey: ["messages", id], queryFn: () => messagesApi.getMessages(id!), enabled: !!id, refetchInterval: 10000 });
+  const { data: usersData } = useQuery({ 
+    queryKey: ["staff-users"], 
+    queryFn: () => adminApi.getUsers({ role: "STAFF", page_size: 100, is_active: "true", is_approved: "true" }),
+    enabled: user?.role === "ADMIN" 
+  });
 
   const sendMutation = useMutation({ mutationFn: () => messagesApi.sendMessage(id!, message), onSuccess: () => { setMessage(""); refetchMessages(); } });
 
@@ -46,11 +54,32 @@ export default function ComplaintDetail() {
     onError: (err: any) => toast.error(err?.response?.data?.detail || "Failed to update status"),
   });
 
+  const assignMutation = useMutation({
+    mutationFn: () => complaintsApi.assign(id!, { staff_id: selectedStaff, note: assignNote || undefined }),
+    onSuccess: () => {
+      toast.success("Complaint assigned!");
+      setSelectedStaff(""); setAssignNote("");
+      queryClient.invalidateQueries({ queryKey: ["complaint", id] });
+      queryClient.invalidateQueries({ queryKey: ["complaint-updates", id] });
+    },
+    onError: (err: any) => toast.error(err?.response?.data?.detail || "Failed to assign"),
+  });
+
+  const analyzeMutation = useMutation({
+    mutationFn: () => complaintsApi.analyze(id!),
+    onSuccess: () => {
+      toast.success("AI analysis updated!");
+      queryClient.invalidateQueries({ queryKey: ["complaint", id] });
+    },
+    onError: (err: any) => toast.error(err?.response?.data?.detail || "Failed to run AI analysis"),
+  });
+
   if (isLoading) return <div className="flex items-center justify-center h-64"><Loader2 className="w-8 h-8 text-primary-400 animate-spin" /></div>;
 
   const complaint = complaintData?.data;
   const updates = updatesData?.data || [];
   const messages = messagesData?.data || [];
+  const staffUsers = usersData?.data?.items || [];
   if (!complaint) return <div className="text-center text-slate-500 py-12">Complaint not found</div>;
 
   const availableStatuses = STATUS_OPTIONS[complaint.status] || [];
@@ -103,11 +132,32 @@ export default function ComplaintDetail() {
         )}
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mt-4 pt-4 border-t border-slate-700/30">
           <div><p className="text-xs text-slate-400">Student</p><p className="text-sm text-slate-200">{complaint.student?.full_name || "—"}</p></div>
+          <div><p className="text-xs text-slate-400">Staff</p><p className="text-sm text-slate-200">{complaint.assigned_staff?.full_name || "Unassigned"}</p></div>
           <div><p className="text-xs text-slate-400">Category</p><p className="text-sm text-slate-200">{complaint.category || "N/A"}</p></div>
           <div><p className="text-xs text-slate-400">Created</p><p className="text-sm text-slate-200">{format(new Date(complaint.created_at), "PPp")}</p></div>
-          <div><p className="text-xs text-slate-400">Resolved</p><p className="text-sm text-slate-200">{complaint.resolved_at ? format(new Date(complaint.resolved_at), "PPp") : "Pending"}</p></div>
         </div>
       </div>
+
+      {/* Admin Assignment Panel */}
+      {user?.role === "ADMIN" && !complaint.assigned_staff_id && (
+        <div className="glass-card p-6 border-primary-500/30 bg-primary-500/5">
+          <div className="flex items-center gap-2 mb-4">
+            <UserPlus className="w-5 h-5 text-primary-400" />
+            <h3 className="font-outfit font-semibold text-slate-200">Assign to Staff</h3>
+          </div>
+          <div className="space-y-4">
+            <select value={selectedStaff} onChange={(e) => setSelectedStaff(e.target.value)} className="input-field">
+              <option value="">Select staff member</option>
+              {staffUsers.map((u: any) => <option key={u.id} value={u.id}>{u.full_name} ({u.email})</option>)}
+            </select>
+            <textarea value={assignNote} onChange={(e) => setAssignNote(e.target.value)} className="input-field min-h-[60px]" placeholder="Add an assignment note (optional)" />
+            <button onClick={() => selectedStaff && assignMutation.mutate()} disabled={!selectedStaff || assignMutation.isPending}
+              className="btn-primary w-full disabled:opacity-50">
+              {assignMutation.isPending ? "Assigning..." : "Assign Staff Member"}
+            </button>
+          </div>
+        </div>
+      )}
 
       {/* Status Update Panel */}
       {availableStatuses.length > 0 && (
@@ -135,25 +185,63 @@ export default function ComplaintDetail() {
       )}
 
       {/* AI Analysis */}
-      {complaint.ai_category && (
-        <div className="glass-card overflow-hidden">
-          <button onClick={() => setShowAI(!showAI)} className="w-full flex items-center justify-between p-4 hover:bg-dark-700/50 transition-colors">
-            <div className="flex items-center gap-2">
-              <Sparkles className="w-5 h-5 text-purple-400" /><span className="font-medium text-slate-200">AI Analysis</span>
-              <AICategoryBadge category={complaint.ai_category} confidence={complaint.ai_confidence} />
-            </div>
+      <div className="glass-card overflow-hidden">
+        <button onClick={() => setShowAI(!showAI)} className="w-full flex items-center justify-between p-4 hover:bg-dark-700/50 transition-colors">
+          <div className="flex items-center gap-2">
+            <Sparkles className="w-5 h-5 text-purple-400" /><span className="font-medium text-slate-200">AI Analysis</span>
+            {complaint.ai_category && <AICategoryBadge category={complaint.ai_category} confidence={complaint.ai_confidence} />}
+          </div>
+          <div className="flex items-center gap-3">
+            {analyzeMutation.isPending && <Loader2 className="w-4 h-4 text-purple-400 animate-spin" />}
             {showAI ? <ChevronUp className="w-4 h-4 text-slate-400" /> : <ChevronDown className="w-4 h-4 text-slate-400" />}
-          </button>
-          {showAI && (
-            <div className="p-4 pt-0 grid grid-cols-2 gap-3">
-              <div className="bg-dark-700/50 rounded-lg p-3"><p className="text-xs text-slate-400">Category</p><p className="text-sm text-slate-200">{complaint.ai_category}</p></div>
-              <div className="bg-dark-700/50 rounded-lg p-3"><p className="text-xs text-slate-400">Priority</p><p className="text-sm text-slate-200">{complaint.ai_priority}</p></div>
-              <div className="bg-dark-700/50 rounded-lg p-3"><p className="text-xs text-slate-400">Department</p><p className="text-sm text-slate-200">{complaint.ai_department}</p></div>
-              <div className="bg-dark-700/50 rounded-lg p-3"><p className="text-xs text-slate-400">Reasoning</p><p className="text-sm text-slate-300">{complaint.ai_reasoning}</p></div>
-            </div>
-          )}
-        </div>
-      )}
+          </div>
+        </button>
+        {showAI && (
+          <div className="p-4 pt-0 space-y-4">
+            {!complaint.ai_category ? (
+              <div className="bg-dark-700/50 rounded-lg p-6 text-center">
+                <p className="text-slate-400 mb-4 text-sm">No AI analysis available for this complaint yet.</p>
+                <button 
+                  onClick={() => analyzeMutation.mutate()} 
+                  disabled={analyzeMutation.isPending}
+                  className="btn-primary py-2 px-6 text-sm"
+                >
+                  {analyzeMutation.isPending ? "Analysing..." : "Run AI Analysis"}
+                </button>
+              </div>
+            ) : (
+              <>
+                <div className="grid grid-cols-2 gap-3">
+                  <div className="bg-dark-700/50 rounded-lg p-3"><p className="text-xs text-slate-400">Category</p><p className="text-sm text-slate-200">{complaint.ai_category}</p></div>
+                  <div className="bg-dark-700/50 rounded-lg p-3"><p className="text-xs text-slate-400">Priority</p><p className="text-sm text-slate-200">{complaint.ai_priority}</p></div>
+                  <div className="bg-dark-700/50 rounded-lg p-3"><p className="text-xs text-slate-400">Department</p><p className="text-sm text-slate-200">{complaint.ai_department}</p></div>
+                  <div className="bg-dark-700/50 rounded-lg p-3">
+                    <p className="text-xs text-slate-400">Confidence</p>
+                    <div className="flex items-center gap-2 mt-1">
+                      <div className="flex-1 h-2 bg-dark-600 rounded-full overflow-hidden">
+                        <div className="h-full bg-gradient-to-r from-primary-500 to-purple-500 rounded-full transition-all" style={{ width: `${(complaint.ai_confidence || 0) * 100}%` }} />
+                      </div>
+                      <span className="text-sm text-slate-200">{((complaint.ai_confidence || 0) * 100).toFixed(0)}%</span>
+                    </div>
+                  </div>
+                </div>
+                <div className="bg-dark-700/50 rounded-lg p-3"><p className="text-xs text-slate-400 mb-1">Reasoning</p><p className="text-sm text-slate-300">{complaint.ai_reasoning}</p></div>
+                
+                <div className="flex justify-end">
+                  <button 
+                    onClick={() => analyzeMutation.mutate()} 
+                    disabled={analyzeMutation.isPending}
+                    className="text-xs text-slate-400 hover:text-primary-400 flex items-center gap-1 transition-colors"
+                  >
+                    <Sparkles className="w-3 h-3" /> 
+                    {analyzeMutation.isPending ? "Refreshing..." : "Refresh Analysis"}
+                  </button>
+                </div>
+              </>
+            )}
+          </div>
+        )}
+      </div>
 
       {/* Timeline */}
       <div className="glass-card p-6">

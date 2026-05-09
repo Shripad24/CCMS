@@ -16,7 +16,7 @@ export default function ComplaintDetail() {
   const user = useAuthStore((s) => s.user);
   const queryClient = useQueryClient();
   const [message, setMessage] = useState("");
-  const [showAI, setShowAI] = useState(false);
+  const [showAI, setShowAI] = useState(true);
   const [rating, setRating] = useState(0);
   const [feedback, setFeedback] = useState("");
   const [hoverRating, setHoverRating] = useState(0);
@@ -53,6 +53,15 @@ export default function ComplaintDetail() {
       queryClient.invalidateQueries({ queryKey: ["complaint", id] });
     },
     onError: (err: any) => toast.error(err?.response?.data?.detail || "Failed to submit rating"),
+  });
+
+  const analyzeMutation = useMutation({
+    mutationFn: () => complaintsApi.analyze(id!),
+    onSuccess: () => {
+      toast.success("AI analysis updated!");
+      queryClient.invalidateQueries({ queryKey: ["complaint", id] });
+    },
+    onError: (err: any) => toast.error(err?.response?.data?.detail || "Failed to run AI analysis"),
   });
 
   if (isLoading) return <div className="flex items-center justify-center h-64"><Loader2 className="w-8 h-8 text-primary-400 animate-spin" /></div>;
@@ -118,37 +127,64 @@ export default function ComplaintDetail() {
       </div>
 
       {/* AI Analysis */}
-      {complaint.ai_category && (
-        <div className="glass-card overflow-hidden">
-          <button onClick={() => setShowAI(!showAI)} className="w-full flex items-center justify-between p-4 hover:bg-dark-700/50 transition-colors">
-            <div className="flex items-center gap-2">
-              <Sparkles className="w-5 h-5 text-purple-400" />
-              <span className="font-medium text-slate-200">AI Analysis</span>
-              <AICategoryBadge category={complaint.ai_category} confidence={complaint.ai_confidence} />
-            </div>
+      <div className="glass-card overflow-hidden">
+        <button onClick={() => setShowAI(!showAI)} className="w-full flex items-center justify-between p-4 hover:bg-dark-700/50 transition-colors">
+          <div className="flex items-center gap-2">
+            <Sparkles className="w-5 h-5 text-purple-400" />
+            <span className="font-medium text-slate-200">AI Analysis</span>
+            {complaint.ai_category && <AICategoryBadge category={complaint.ai_category} confidence={complaint.ai_confidence} />}
+          </div>
+          <div className="flex items-center gap-3">
+            {analyzeMutation.isPending && <Loader2 className="w-4 h-4 text-purple-400 animate-spin" />}
             {showAI ? <ChevronUp className="w-4 h-4 text-slate-400" /> : <ChevronDown className="w-4 h-4 text-slate-400" />}
-          </button>
-          {showAI && (
-            <div className="p-4 pt-0 space-y-3">
-              <div className="grid grid-cols-2 gap-3">
-                <div className="bg-dark-700/50 rounded-lg p-3"><p className="text-xs text-slate-400">Category</p><p className="text-sm text-slate-200">{complaint.ai_category}</p></div>
-                <div className="bg-dark-700/50 rounded-lg p-3"><p className="text-xs text-slate-400">Priority</p><p className="text-sm text-slate-200">{complaint.ai_priority}</p></div>
-                <div className="bg-dark-700/50 rounded-lg p-3"><p className="text-xs text-slate-400">Department</p><p className="text-sm text-slate-200">{complaint.ai_department}</p></div>
-                <div className="bg-dark-700/50 rounded-lg p-3">
-                  <p className="text-xs text-slate-400">Confidence</p>
-                  <div className="flex items-center gap-2 mt-1">
-                    <div className="flex-1 h-2 bg-dark-600 rounded-full overflow-hidden">
-                      <div className="h-full bg-gradient-to-r from-primary-500 to-purple-500 rounded-full transition-all" style={{ width: `${(complaint.ai_confidence || 0) * 100}%` }} />
+          </div>
+        </button>
+        {showAI && (
+          <div className="p-4 pt-0 space-y-3">
+            {!complaint.ai_category ? (
+              <div className="bg-dark-700/50 rounded-lg p-6 text-center">
+                <p className="text-slate-400 mb-4 text-sm">No AI analysis available for this complaint yet.</p>
+                <button 
+                  onClick={() => analyzeMutation.mutate()} 
+                  disabled={analyzeMutation.isPending}
+                  className="btn-primary py-2 px-6 text-sm"
+                >
+                  {analyzeMutation.isPending ? "Analysing..." : "Run AI Analysis"}
+                </button>
+              </div>
+            ) : (
+              <>
+                <div className="grid grid-cols-2 gap-3">
+                  <div className="bg-dark-700/50 rounded-lg p-3"><p className="text-xs text-slate-400">Category</p><p className="text-sm text-slate-200">{complaint.ai_category}</p></div>
+                  <div className="bg-dark-700/50 rounded-lg p-3"><p className="text-xs text-slate-400">Priority</p><p className="text-sm text-slate-200">{complaint.ai_priority}</p></div>
+                  <div className="bg-dark-700/50 rounded-lg p-3"><p className="text-xs text-slate-400">Department</p><p className="text-sm text-slate-200">{complaint.ai_department}</p></div>
+                  <div className="bg-dark-700/50 rounded-lg p-3">
+                    <p className="text-xs text-slate-400">Confidence</p>
+                    <div className="flex items-center gap-2 mt-1">
+                      <div className="flex-1 h-2 bg-dark-600 rounded-full overflow-hidden">
+                        <div className="h-full bg-gradient-to-r from-primary-500 to-purple-500 rounded-full transition-all" style={{ width: `${(complaint.ai_confidence || 0) * 100}%` }} />
+                      </div>
+                      <span className="text-sm text-slate-200">{((complaint.ai_confidence || 0) * 100).toFixed(0)}%</span>
                     </div>
-                    <span className="text-sm text-slate-200">{((complaint.ai_confidence || 0) * 100).toFixed(0)}%</span>
                   </div>
                 </div>
-              </div>
-              {complaint.ai_reasoning && <div className="bg-dark-700/50 rounded-lg p-3"><p className="text-xs text-slate-400 mb-1">Reasoning</p><p className="text-sm text-slate-300">{complaint.ai_reasoning}</p></div>}
-            </div>
-          )}
-        </div>
-      )}
+                {complaint.ai_reasoning && <div className="bg-dark-700/50 rounded-lg p-3"><p className="text-xs text-slate-400 mb-1">Reasoning</p><p className="text-sm text-slate-300">{complaint.ai_reasoning}</p></div>}
+                
+                <div className="flex justify-end">
+                  <button 
+                    onClick={() => analyzeMutation.mutate()} 
+                    disabled={analyzeMutation.isPending}
+                    className="text-xs text-slate-400 hover:text-primary-400 flex items-center gap-1 transition-colors"
+                  >
+                    <Sparkles className="w-3 h-3" /> 
+                    {analyzeMutation.isPending ? "Refreshing..." : "Refresh Analysis"}
+                  </button>
+                </div>
+              </>
+            )}
+          </div>
+        )}
+      </div>
 
       {/* Status Timeline */}
       <div className="glass-card p-6">

@@ -5,7 +5,7 @@ import { toast } from "sonner";
 import { User, Lock, Mail, Loader2, ShieldCheck, ShieldAlert } from "lucide-react";
 
 export default function ProfilePage() {
-  const { user, setUser } = useAuthStore();
+  const { user, updateUser } = useAuthStore();
   const [fullName, setFullName] = useState(user?.full_name || "");
   const [currentPassword, setCurrentPassword] = useState("");
   const [newPassword, setNewPassword] = useState("");
@@ -34,7 +34,7 @@ export default function ProfilePage() {
       }
 
       const res = await authApi.updateProfile(data);
-      setUser(res.data);
+      updateUser(res.data);
       toast.success("Profile updated successfully!");
       setCurrentPassword("");
       setNewPassword("");

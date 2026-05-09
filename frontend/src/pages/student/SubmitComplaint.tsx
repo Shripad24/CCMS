@@ -1,7 +1,9 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { complaintsApi } from "@/api/complaints";
-import { Upload, Loader2, Sparkles, ArrowRight, ArrowLeft, CheckCircle2 } from "lucide-react";
+import { adminApi } from "@/api/admin";
+import { useQuery } from "@tanstack/react-query";
+import { Upload, Loader2, Sparkles, ArrowRight, ArrowLeft, CheckCircle2, Building2 } from "lucide-react";
 import { toast } from "sonner";
 
 export default function SubmitComplaint() {
@@ -10,9 +12,16 @@ export default function SubmitComplaint() {
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
   const [file, setFile] = useState<File | null>(null);
+  const [departmentId, setDepartmentId] = useState("");
   const [loading, setLoading] = useState(false);
   const [result, setResult] = useState<any>(null);
   const [dragOver, setDragOver] = useState(false);
+
+  const { data: deptData } = useQuery({ 
+    queryKey: ["departments"], 
+    queryFn: () => adminApi.getDepartments() 
+  });
+  const departments = deptData?.data || [];
 
   const handleSubmit = async () => {
     setLoading(true);
@@ -20,6 +29,7 @@ export default function SubmitComplaint() {
       const formData = new FormData();
       formData.append("title", title);
       formData.append("description", description);
+      if (departmentId && departmentId !== "other") formData.append("department_id", departmentId);
       if (file) formData.append("file", file);
       const res = await complaintsApi.submit(formData);
       setResult(res.data);
@@ -92,7 +102,7 @@ export default function SubmitComplaint() {
 
         <div className="flex gap-3">
           <button onClick={() => navigate("/student/complaints")} className="btn-secondary flex-1">View My Complaints</button>
-          <button onClick={() => { setResult(null); setStep(1); setTitle(""); setDescription(""); setFile(null); }} className="btn-primary flex-1">Submit Another</button>
+          <button onClick={() => { setResult(null); setStep(1); setTitle(""); setDescription(""); setFile(null); setDepartmentId(""); }} className="btn-primary flex-1">Submit Another</button>
         </div>
       </div>
     );
@@ -118,6 +128,24 @@ export default function SubmitComplaint() {
             <label className="block text-sm font-medium text-slate-300 mb-1.5">Title</label>
             <input value={title} onChange={(e) => setTitle(e.target.value)} className="input-field" placeholder="Brief summary of your complaint" maxLength={200} />
             <p className="text-xs text-slate-500 mt-1">{title.length}/200 characters</p>
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-slate-300 mb-1.5">Department (Optional)</label>
+            <div className="relative">
+              <Building2 className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+              <select 
+                value={departmentId} 
+                onChange={(e) => setDepartmentId(e.target.value)} 
+                className="input-field pl-10"
+              >
+                <option value="">Let AI automatically categorize</option>
+                {departments.map((d: any) => (
+                  <option key={d.id} value={d.id}>{d.name}</option>
+                ))}
+                <option value="other">Other</option>
+              </select>
+            </div>
+            <p className="text-xs text-slate-500 mt-1">Select "Other" or leave blank if you're unsure; our AI will route it for you.</p>
           </div>
           <div>
             <label className="block text-sm font-medium text-slate-300 mb-1.5">Description</label>
@@ -158,6 +186,14 @@ export default function SubmitComplaint() {
               <p className="text-xs text-slate-400 mb-1">Title</p>
               <p className="text-slate-200">{title}</p>
             </div>
+            {departmentId && (
+              <div className="bg-dark-700/50 rounded-lg p-4">
+                <p className="text-xs text-slate-400 mb-1">Target Department</p>
+                <p className="text-slate-200">
+                  {departmentId === "other" ? "Other (AI will decide)" : departments.find((d: any) => d.id === departmentId)?.name || "Unknown"}
+                </p>
+              </div>
+            )}
             <div className="bg-dark-700/50 rounded-lg p-4">
               <p className="text-xs text-slate-400 mb-1">Description</p>
               <p className="text-slate-300 text-sm whitespace-pre-wrap">{description}</p>

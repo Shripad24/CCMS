@@ -19,17 +19,24 @@ logger = logging.getLogger(__name__)
 router = APIRouter(prefix="/api/v1/departments", tags=["Departments"])
 
 
+from sqlalchemy.orm import selectinload
+
 @router.get("/")
 async def list_departments(
     current_user: User = Depends(get_current_user),
     db: AsyncSession = Depends(get_db),
 ):
-    result = await db.execute(select(Department).order_by(Department.name))
+    result = await db.execute(select(Department).options(selectinload(Department.sla_policies)).order_by(Department.name))
     departments = result.scalars().all()
     return [{
         "id": str(d.id), "name": d.name, "description": d.description,
         "head_user_id": str(d.head_user_id) if d.head_user_id else None,
         "created_at": d.created_at.isoformat(),
+        "sla_policies": [{
+            "priority": p.priority,
+            "resolution_hours": p.resolution_hours,
+            "warning_threshold_pct": p.warning_threshold_pct
+        } for p in d.sla_policies]
     } for d in departments]
 
 
@@ -46,6 +53,7 @@ async def create_department(
     dept = Department(name=body.name, description=body.description, head_user_id=body.head_user_id)
     db.add(dept)
     await db.flush()
+    await db.commit()
     return {"message": "Department created", "id": str(dept.id)}
 
 
@@ -68,6 +76,7 @@ async def update_department(
     if body.head_user_id is not None:
         dept.head_user_id = body.head_user_id
 
+    await db.commit()
     return {"message": "Department updated"}
 
 
@@ -101,5 +110,5 @@ async def upsert_sla_policy(
         )
         db.add(policy)
 
-    await db.flush()
+    await db.commit()
     return {"message": "SLA policy updated"}

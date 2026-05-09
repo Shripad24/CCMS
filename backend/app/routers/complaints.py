@@ -285,6 +285,12 @@ async def update_complaint_status(
         complaint.sla_paused_duration_minutes = (complaint.sla_paused_duration_minutes or 0) + int(paused_delta)
         complaint.sla_paused_at = None
 
+    if new_status == "ASSIGNED" and not complaint.assigned_staff_id:
+        raise HTTPException(
+            status_code=400, 
+            detail="Cannot set status to ASSIGNED without an assigned staff member. Please use the assignment flow."
+        )
+
     complaint.status = ComplaintStatus(new_status)
     complaint.updated_at = now
 
@@ -335,10 +341,15 @@ async def assign_complaint(
     if not complaint:
         raise HTTPException(status_code=404, detail="Complaint not found")
 
-    staff_result = await db.execute(select(User).where(User.id == body.staff_id, User.role == UserRole.STAFF))
+    staff_result = await db.execute(select(User).where(
+        User.id == body.staff_id, 
+        User.role == UserRole.STAFF,
+        User.is_active == True,
+        User.is_approved == True
+    ))
     staff = staff_result.scalar_one_or_none()
     if not staff:
-        raise HTTPException(status_code=404, detail="Staff member not found")
+        raise HTTPException(status_code=400, detail="Staff member not found, inactive, or not approved")
 
     previous_status = complaint.status.value
     complaint.assigned_staff_id = staff.id
@@ -445,3 +456,50 @@ async def submit_rating(
     db.add(update)
 
     return {"message": "Rating submitted", "rating_id": str(rating.id)}
+    
+
+@router.post("/{complaint_id}/analyze")
+async def reanalyze_complaint(
+    complaint_id: str,
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+):
+    from uuid import UUID as PyUUID
+    cid = PyUUID(complaint_id)
+    result = await db.execute(select(Complaint).where(Complaint.id == cid))
+    complaint = result.scalar_one_or_none()
+
+    if not complaint:
+        raise HTTPException(status_code=404, detail="Complaint not found")
+        
+    # Re-run AI analysis
+    ai_result = await classify_complaint(complaint.title, complaint.description)
+    
+    # Update complaint with new AI results
+    complaint.ai_category = ai_result.get("category")
+    complaint.ai_priority = ai_result.get("priority")
+    complaint.ai_department = ai_result.get("suggested_department")
+    complaint.ai_reasoning = ai_result.get("reasoning")
+    complaint.ai_confidence = ai_result.get("confidence_score")
+    
+    # Update the actual category and priority if they were default/none
+    if not complaint.category or complaint.category == "OTHER":
+        complaint.category = ai_result.get("category", "OTHER")
+    
+    # If the current priority is default (MEDIUM) or the AI finds it to be CRITICAL, sync it
+    ai_p = ai_result.get("priority", "MEDIUM")
+    if complaint.priority == Priority.MEDIUM or ai_p == "CRITICAL":
+        try:
+            complaint.priority = Priority(ai_p)
+        except ValueError:
+            pass
+    await db.commit()
+    await db.refresh(complaint)
+    
+    return {
+        "ai_category": complaint.ai_category,
+        "ai_priority": complaint.ai_priority,
+        "ai_department": complaint.ai_department,
+        "ai_reasoning": complaint.ai_reasoning,
+        "ai_confidence": complaint.ai_confidence,
+    }

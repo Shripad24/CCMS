@@ -27,6 +27,7 @@ async def list_users(
     search: str | None = None,
     role: str | None = None,
     is_approved: bool | None = None,
+    is_active: bool | None = None,
     page: int = Query(1, ge=1),
     page_size: int = Query(10, ge=1, le=100),
     current_user: User = Depends(require_role("ADMIN")),
@@ -39,6 +40,8 @@ async def list_users(
         query = query.where(User.role == role)
     if is_approved is not None:
         query = query.where(User.is_approved == is_approved)
+    if is_active is not None:
+        query = query.where(User.is_active == is_active)
 
     count_q = select(func.count()).select_from(query.subquery())
     total = (await db.execute(count_q)).scalar() or 0

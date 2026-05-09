@@ -30,4 +30,7 @@ export const complaintsApi = {
 
   submitRating: (id: string, data: { score: number; feedback_text?: string }) =>
     api.post(`/complaints/${id}/rating`, data),
+
+  analyze: (id: string) =>
+    api.post(`/complaints/${id}/analyze`),
 };

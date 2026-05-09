@@ -20,8 +20,16 @@ ReactDOM.createRoot(document.getElementById("root")!).render(
         position="top-right"
         richColors
         theme="dark"
+        offset={100}
         toastOptions={{
-          style: { background: "#1E293B", border: "1px solid #334155", color: "#F1F5F9" },
+          style: { 
+            background: "#1E293B", 
+            border: "1px solid #334155", 
+            color: "#F1F5F9",
+            fontSize: "1.1rem",
+            padding: "16px 24px",
+            minWidth: "350px"
+          },
         }}
       />
     </QueryClientProvider>
