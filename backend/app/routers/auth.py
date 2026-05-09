@@ -11,7 +11,7 @@ from app.schemas.auth import (
     ForgotPasswordRequest, ResetPasswordRequest,
     TokenResponse, MessageResponse,
 )
-from app.schemas.user import UserResponse
+from app.schemas.user import UserResponse, ProfileUpdateRequest
 from app.services.auth_service import (
     register_user, authenticate_user, generate_tokens,
     blacklist_token, verify_email, reset_password,
@@ -138,7 +138,7 @@ async def get_me(current_user: User = Depends(get_current_user)):
 
 @router.patch("/me", response_model=UserResponse)
 async def update_me(
-    body: __import__("app.schemas.user", fromlist=["ProfileUpdateRequest"]).ProfileUpdateRequest,
+    body: ProfileUpdateRequest,
     current_user: User = Depends(get_current_user),
     db: AsyncSession = Depends(get_db)
 ):
@@ -147,10 +147,10 @@ async def update_me(
     if body.profile_photo_url is not None:
         current_user.profile_photo_url = body.profile_photo_url
     if body.new_password and body.current_password:
-        from app.core.security import verify_password, get_password_hash
+        from app.core.security import verify_password, hash_password
         if not verify_password(body.current_password, current_user.password_hash):
             raise HTTPException(status_code=400, detail="Incorrect current password")
-        current_user.password_hash = get_password_hash(body.new_password)
+        current_user.password_hash = hash_password(body.new_password)
     
     await db.commit()
     await db.refresh(current_user)

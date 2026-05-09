@@ -10,13 +10,18 @@ export function Navbar({ onMenuClick }: NavbarProps) {
   const { user, logout } = useAuth();
 
   return (
-    <header className="h-16 bg-slate-900/60 backdrop-blur-xl border-b border-white/5 flex items-center justify-between px-4 lg:px-6 sticky top-0 z-30 shadow-lg">
+    <header className="h-20 bg-slate-900/60 backdrop-blur-xl border-b border-white/5 flex items-center justify-between px-4 lg:px-6 sticky top-0 z-30 shadow-lg transition-all">
       <div className="flex items-center gap-3">
         <button onClick={onMenuClick} className="lg:hidden p-2 rounded-lg hover:bg-dark-700 transition-colors" id="menu-toggle">
-          <Menu className="w-5 h-5 text-slate-300" />
+          <Menu className="w-6 h-6 text-slate-300" />
         </button>
-        <div className="flex items-center gap-2">
-          <img src="/logo.png" alt="CCMS Logo" className="h-8 w-auto rounded object-contain bg-dark-800" />
+        <div className="flex items-center gap-4">
+          <img src="/logo.png" alt="CCMS Logo" className="h-12 w-auto rounded object-contain bg-dark-800 shadow-sm shadow-violet-500/20" />
+          <span className="font-outfit font-bold text-2xl hidden md:block">
+            <span className="text-white">Campus </span>
+            <span className="gradient-text">Complaints</span>
+          </span>
+          <span className="font-outfit font-bold text-xl md:hidden gradient-text">CCMS</span>
         </div>
       </div>
 
