@@ -77,7 +77,7 @@ export default function DepartmentManagement() {
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
-        <h1 className="font-outfit text-2xl font-bold text-slate-100">Department Management</h1>
+        <h1 className="font-playfair text-2xl font-bold" style={{ color: "var(--text-heading)" }}>Department Management</h1>
         <button onClick={() => setShowModal(true)} className="btn-primary flex items-center gap-2">
           <Plus className="w-4 h-4" /> Add Department
         </button>
@@ -92,39 +92,41 @@ export default function DepartmentManagement() {
               <div className="absolute top-4 right-4 flex gap-2">
                 <button 
                   onClick={() => openSLAModal(d)}
-                  className="p-2 bg-dark-700 hover:bg-dark-600 rounded-lg opacity-0 group-hover:opacity-100 transition-opacity"
+                  className="p-2 rounded-lg transition-all hover:bg-white/10"
+                  style={{ background: "rgba(255,255,255,0.08)" }}
                   title="Manage SLA Policies"
                 >
-                  <Clock className="w-4 h-4 text-violet-400" />
+                  <Clock className="w-4 h-4" style={{ color: "var(--accent-lavender)" }} />
                 </button>
                 <button 
                   onClick={() => handleEdit(d)}
-                  className="p-2 bg-dark-700 hover:bg-dark-600 rounded-lg opacity-0 group-hover:opacity-100 transition-opacity"
+                  className="p-2 rounded-lg transition-all hover:bg-white/10"
+                  style={{ background: "rgba(255,255,255,0.08)" }}
                   title="Edit Department"
                 >
-                  <Edit2 className="w-4 h-4 text-slate-300" />
+                  <Edit2 className="w-4 h-4" style={{ color: "var(--text-muted)" }} />
                 </button>
               </div>
-              <h3 className="font-outfit font-semibold text-slate-200 mb-1">{d.name}</h3>
-              <p className="text-sm text-slate-400 mb-3 line-clamp-2">{d.description || "No description"}</p>
+              <h3 className="font-playfair font-bold text-lg mb-1" style={{ color: "var(--text-heading)" }}>{d.name}</h3>
+              <p className="text-sm mb-3 line-clamp-2" style={{ color: "var(--text-muted)" }}>{d.description || "No description"}</p>
               
               <div className="space-y-2 mt-4">
                 {d.head_user_id && (
-                  <div className="flex items-center gap-2 text-xs text-slate-400 bg-dark-800/50 p-2 rounded-lg border border-white/5">
-                    <User className="w-3.5 h-3.5 text-violet-400" />
-                    <span className="truncate">Head: {staffUsers.find((u: any) => u.id === d.head_user_id)?.full_name || "Unknown"}</span>
+                  <div className="flex items-center gap-2 text-xs p-2.5 rounded-xl border" style={{ background: "rgba(255,255,255,0.05)", borderColor: "var(--glass-border)", color: "var(--text-body)" }}>
+                    <User className="w-3.5 h-3.5" style={{ color: "var(--accent-lavender)" }} />
+                    <span className="truncate font-medium">Head: {staffUsers.find((u: any) => u.id === d.head_user_id)?.full_name || "Unknown"}</span>
                   </div>
                 )}
                 
                 <div className="flex flex-wrap gap-1.5">
                   {d.sla_policies?.length > 0 ? (
                     d.sla_policies.map((p: any) => (
-                      <span key={p.priority} className="px-2 py-0.5 rounded-full bg-dark-800 text-[10px] text-slate-400 border border-slate-700/50">
+                      <span key={p.priority} className="px-2.5 py-1 rounded-full text-[10px] font-mono border" style={{ background: "rgba(255,255,255,0.08)", borderColor: "var(--glass-border)", color: "var(--text-muted)" }}>
                         {p.priority}: {p.resolution_hours}h
                       </span>
                     ))
                   ) : (
-                    <span className="text-[10px] text-slate-500 italic">No SLA policies set</span>
+                    <span className="text-[10px] italic" style={{ color: "var(--text-muted)", opacity: 0.7 }}>No SLA policies set</span>
                   )}
                 </div>
               </div>
@@ -139,17 +141,17 @@ export default function DepartmentManagement() {
         <div className="fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-4" onClick={closeModal}>
           <div className="glass-card p-6 w-full max-w-md animate-in fade-in zoom-in duration-200" onClick={(e) => e.stopPropagation()}>
             <div className="flex items-center justify-between mb-4">
-              <h3 className="font-outfit font-semibold text-slate-200">{editId ? "Edit Department" : "Add Department"}</h3>
-              <button onClick={closeModal}><X className="w-5 h-5 text-slate-400" /></button>
+              <h3 className="font-playfair text-xl font-bold" style={{ color: "var(--text-heading)" }}>{editId ? "Edit Department" : "Add Department"}</h3>
+              <button onClick={closeModal} className="p-1 hover:bg-white/10 rounded-lg"><X className="w-5 h-5" style={{ color: "var(--text-muted)" }} /></button>
             </div>
-            <div className="space-y-4">
+            <div className="space-y-5">
               <div>
-                <label className="block text-sm font-medium text-slate-300 mb-1.5">Department Name</label>
+                <label className="block text-sm font-dm font-medium mb-1.5" style={{ color: "var(--text-body)" }}>Department Name</label>
                 <input value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} className="input-field" placeholder="e.g. IT Services" />
               </div>
               
               <div>
-                <label className="block text-sm font-medium text-slate-300 mb-1.5">Head of Department (Optional)</label>
+                <label className="block text-sm font-dm font-medium mb-1.5" style={{ color: "var(--text-body)" }}>Head of Department (Optional)</label>
                 <select 
                   value={form.head_user_id} 
                   onChange={(e) => setForm({ ...form, head_user_id: e.target.value })} 
@@ -163,8 +165,8 @@ export default function DepartmentManagement() {
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-slate-300 mb-1.5">Description</label>
-                <textarea value={form.description} onChange={(e) => setForm({ ...form, description: e.target.value })} className="input-field min-h-[80px]" placeholder="Brief description of the department's responsibilities" />
+                <label className="block text-sm font-dm font-medium mb-1.5" style={{ color: "var(--text-body)" }}>Description</label>
+                <textarea value={form.description} onChange={(e) => setForm({ ...form, description: e.target.value })} className="input-field min-h-[100px]" placeholder="Brief description of the department's responsibilities" />
               </div>
 
               <button 
@@ -185,10 +187,10 @@ export default function DepartmentManagement() {
           <div className="glass-card p-6 w-full max-w-lg animate-in fade-in zoom-in duration-200" onClick={(e) => e.stopPropagation()}>
             <div className="flex items-center justify-between mb-4">
               <div>
-                <h3 className="font-outfit font-semibold text-slate-200">SLA Policies</h3>
-                <p className="text-xs text-slate-400">{selectedDept.name}</p>
+                <h3 className="font-playfair text-xl font-bold" style={{ color: "var(--text-heading)" }}>SLA Policies</h3>
+                <p className="text-xs font-mono tracking-widest uppercase mt-1" style={{ color: "var(--text-muted)" }}>{selectedDept.name}</p>
               </div>
-              <button onClick={() => setShowSLAModal(false)}><X className="w-5 h-5 text-slate-400" /></button>
+              <button onClick={() => setShowSLAModal(false)} className="p-1 hover:bg-white/10 rounded-lg"><X className="w-5 h-5" style={{ color: "var(--text-muted)" }} /></button>
             </div>
 
             <div className="space-y-6">
@@ -198,15 +200,18 @@ export default function DepartmentManagement() {
                   const isEditing = slaForm.priority === priority;
 
                   return (
-                    <div key={priority} className={`p-4 rounded-xl border transition-colors ${isEditing ? "bg-primary-500/5 border-primary-500/30" : "bg-dark-700/50 border-slate-700/50"}`}>
-                      <div className="flex items-center justify-between mb-3">
-                        <div className="flex items-center gap-2">
-                          <div className={`w-2 h-2 rounded-full ${
-                            priority === "CRITICAL" ? "bg-red-500" :
-                            priority === "HIGH" ? "bg-orange-500" :
-                            priority === "MEDIUM" ? "bg-blue-500" : "bg-slate-400"
-                          }`} />
-                          <span className="font-medium text-slate-200 text-sm uppercase tracking-wider">{priority}</span>
+                    <div key={priority} className={`p-4 rounded-2xl border transition-all duration-300 ${isEditing ? "shadow-lg scale-[1.02]" : ""}`} style={{ 
+                      background: isEditing ? "rgba(168,197,160,0.08)" : "rgba(255,255,255,0.04)",
+                      borderColor: isEditing ? "var(--accent-primary)" : "var(--glass-border)"
+                    }}>
+                      <div className="flex items-center justify-between mb-4">
+                        <div className="flex items-center gap-3">
+                          <div className={`w-2.5 h-2.5 rounded-full ${
+                            priority === "CRITICAL" ? "bg-rose-400" :
+                            priority === "HIGH" ? "bg-orange-400" :
+                            priority === "MEDIUM" ? "bg-sky-400" : "bg-slate-400"
+                          }`} style={{ boxShadow: "0 0 10px currentColor" }} />
+                          <span className="font-mono text-xs font-bold uppercase tracking-widest" style={{ color: "var(--text-heading)" }}>{priority}</span>
                         </div>
                         {policy && !isEditing && (
                           <button 

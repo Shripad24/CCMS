@@ -56,46 +56,50 @@ export default function SubmitComplaint() {
     return (
       <div className="max-w-2xl mx-auto space-y-6 fade-in">
         <div className="glass-card p-8 text-center">
-          <div className="w-16 h-16 bg-emerald-500/10 rounded-full flex items-center justify-center mx-auto mb-4 border border-emerald-500/30">
-            <CheckCircle2 className="w-8 h-8 text-emerald-400" />
+          <div
+            className="w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4"
+            style={{ background: "rgba(168,197,160,0.15)", border: "1px solid rgba(168,197,160,0.30)" }}
+          >
+            <CheckCircle2 className="w-8 h-8" style={{ color: "var(--accent-primary)" }} />
           </div>
-          <h2 className="font-outfit text-2xl font-bold text-slate-100 mb-2">Complaint Submitted!</h2>
-          <p className="text-slate-400 mb-4">Reference Number:</p>
-          <p className="text-3xl font-mono font-bold text-primary-400 mb-6">{result.reference_no}</p>
+          <h2 className="font-playfair text-2xl font-bold mb-2" style={{ color: "var(--text-heading)" }}>Complaint Submitted!</h2>
+          <p className="font-dm text-sm mb-2" style={{ color: "var(--text-muted)" }}>Reference Number:</p>
+          <p className="text-3xl font-mono font-bold mb-6" style={{ color: "var(--accent-primary)" }}>{result.reference_no}</p>
         </div>
 
         <div className="glass-card p-6">
           <div className="flex items-center gap-2 mb-4">
-            <Sparkles className="w-5 h-5 text-purple-400" />
-            <h3 className="font-outfit font-semibold text-slate-200">AI Classification Result</h3>
+            <Sparkles className="w-5 h-5" style={{ color: "var(--accent-lavender)" }} />
+            <h3 className="font-playfair font-bold" style={{ color: "var(--text-heading)" }}>AI Classification Result</h3>
           </div>
           <div className="grid grid-cols-2 gap-4">
-            <div className="bg-dark-700/50 rounded-lg p-3">
-              <p className="text-xs text-slate-400 mb-1">Category</p>
-              <p className="text-sm font-medium text-slate-200">{result.ai_category || "N/A"}</p>
-            </div>
-            <div className="bg-dark-700/50 rounded-lg p-3">
-              <p className="text-xs text-slate-400 mb-1">Priority</p>
-              <p className="text-sm font-medium text-slate-200">{result.ai_priority || "N/A"}</p>
-            </div>
-            <div className="bg-dark-700/50 rounded-lg p-3">
-              <p className="text-xs text-slate-400 mb-1">Suggested Department</p>
-              <p className="text-sm font-medium text-slate-200">{result.ai_department || "N/A"}</p>
-            </div>
-            <div className="bg-dark-700/50 rounded-lg p-3">
-              <p className="text-xs text-slate-400 mb-1">Confidence</p>
+            {[
+              { label: "Category", value: result.ai_category || "N/A" },
+              { label: "Priority", value: result.ai_priority || "N/A" },
+              { label: "Suggested Department", value: result.ai_department || "N/A" },
+            ].map((item) => (
+              <div key={item.label} className="rounded-2xl p-4" style={{ background: "rgba(255,255,255,0.10)", border: "1px solid rgba(255,255,255,0.20)" }}>
+                <p className="text-xs font-mono uppercase tracking-wider mb-1" style={{ color: "var(--text-muted)" }}>{item.label}</p>
+                <p className="text-sm font-dm font-medium" style={{ color: "var(--text-body)" }}>{item.value}</p>
+              </div>
+            ))}
+            <div className="rounded-2xl p-4" style={{ background: "rgba(255,255,255,0.10)", border: "1px solid rgba(255,255,255,0.20)" }}>
+              <p className="text-xs font-mono uppercase tracking-wider mb-1" style={{ color: "var(--text-muted)" }}>Confidence</p>
               <div className="flex items-center gap-2">
-                <div className="flex-1 h-2 bg-dark-600 rounded-full overflow-hidden">
-                  <div className="h-full bg-gradient-to-r from-primary-500 to-purple-500 rounded-full" style={{ width: `${(result.ai_confidence || 0) * 100}%` }} />
+                <div className="flex-1 h-2 rounded-full overflow-hidden" style={{ background: "rgba(255,255,255,0.15)" }}>
+                  <div
+                    className="h-full rounded-full"
+                    style={{ width: `${(result.ai_confidence || 0) * 100}%`, background: "linear-gradient(90deg, var(--accent-primary), var(--accent-lavender))" }}
+                  />
                 </div>
-                <span className="text-sm font-medium text-slate-200">{((result.ai_confidence || 0) * 100).toFixed(0)}%</span>
+                <span className="text-sm font-mono font-bold" style={{ color: "var(--text-body)" }}>{((result.ai_confidence || 0) * 100).toFixed(0)}%</span>
               </div>
             </div>
           </div>
           {result.ai_reasoning && (
-            <div className="mt-4 bg-dark-700/50 rounded-lg p-3">
-              <p className="text-xs text-slate-400 mb-1">AI Reasoning</p>
-              <p className="text-sm text-slate-300">{result.ai_reasoning}</p>
+            <div className="mt-4 rounded-2xl p-4" style={{ background: "rgba(255,255,255,0.10)", border: "1px solid rgba(255,255,255,0.20)" }}>
+              <p className="text-xs font-mono uppercase tracking-wider mb-1" style={{ color: "var(--text-muted)" }}>AI Reasoning</p>
+              <p className="text-sm font-dm" style={{ color: "var(--text-body)" }}>{result.ai_reasoning}</p>
             </div>
           )}
         </div>
@@ -110,14 +114,28 @@ export default function SubmitComplaint() {
 
   return (
     <div className="max-w-2xl mx-auto space-y-6">
-      <h1 className="font-outfit text-2xl font-bold text-slate-100">Submit New Complaint</h1>
+      <h1 className="font-playfair text-2xl font-bold" style={{ color: "var(--text-heading)" }}>Submit New Complaint</h1>
 
+      {/* Stepper */}
       <div className="flex items-center gap-3 mb-6">
         {[1, 2].map((s) => (
           <div key={s} className="flex items-center gap-2">
-            <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-medium ${step >= s ? "bg-primary-500 text-white" : "bg-dark-700 text-slate-500"}`}>{s}</div>
-            <span className={`text-sm ${step >= s ? "text-slate-200" : "text-slate-500"}`}>{s === 1 ? "Details" : "Review"}</span>
-            {s < 2 && <div className={`w-12 h-0.5 ${step > s ? "bg-primary-500" : "bg-dark-700"}`} />}
+            <div
+              className="w-8 h-8 rounded-full flex items-center justify-center text-sm font-dm font-semibold"
+              style={{
+                background: step >= s ? "var(--accent-primary)" : "rgba(255,255,255,0.15)",
+                color: step >= s ? "white" : "var(--text-muted)",
+                border: `1px solid ${step >= s ? "var(--accent-primary)" : "rgba(255,255,255,0.25)"}`,
+              }}
+            >
+              {s}
+            </div>
+            <span className="text-sm font-dm" style={{ color: step >= s ? "var(--text-body)" : "var(--text-muted)" }}>
+              {s === 1 ? "Details" : "Review"}
+            </span>
+            {s < 2 && (
+              <div className="w-12 h-0.5 rounded-full" style={{ background: step > s ? "var(--accent-primary)" : "rgba(255,255,255,0.20)" }} />
+            )}
           </div>
         ))}
       </div>
@@ -125,14 +143,14 @@ export default function SubmitComplaint() {
       {step === 1 && (
         <div className="glass-card p-6 space-y-5">
           <div>
-            <label className="block text-sm font-medium text-slate-300 mb-1.5">Title</label>
+            <label className="block text-sm font-dm font-medium mb-1.5" style={{ color: "var(--text-body)" }}>Title</label>
             <input value={title} onChange={(e) => setTitle(e.target.value)} className="input-field" placeholder="Brief summary of your complaint" maxLength={200} />
-            <p className="text-xs text-slate-500 mt-1">{title.length}/200 characters</p>
+            <p className="text-xs font-dm mt-1" style={{ color: "var(--text-muted)" }}>{title.length}/200 characters</p>
           </div>
           <div>
-            <label className="block text-sm font-medium text-slate-300 mb-1.5">Department (Optional)</label>
+            <label className="block text-sm font-dm font-medium mb-1.5" style={{ color: "var(--text-body)" }}>Department (Optional)</label>
             <div className="relative">
-              <Building2 className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+              <Building2 className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4" style={{ color: "var(--text-muted)" }} />
               <select 
                 value={departmentId} 
                 onChange={(e) => setDepartmentId(e.target.value)} 
@@ -145,28 +163,32 @@ export default function SubmitComplaint() {
                 <option value="other">Other</option>
               </select>
             </div>
-            <p className="text-xs text-slate-500 mt-1">Select "Other" or leave blank if you're unsure; our AI will route it for you.</p>
+            <p className="text-xs font-dm mt-1" style={{ color: "var(--text-muted)" }}>Select "Other" or leave blank if you're unsure; our AI will route it for you.</p>
           </div>
           <div>
-            <label className="block text-sm font-medium text-slate-300 mb-1.5">Description</label>
+            <label className="block text-sm font-dm font-medium mb-1.5" style={{ color: "var(--text-body)" }}>Description</label>
             <textarea value={description} onChange={(e) => setDescription(e.target.value)} className="input-field min-h-[150px] resize-y"
               placeholder="Describe your complaint in detail. Include location, time, and any relevant information." maxLength={5000} />
-            <p className="text-xs text-slate-500 mt-1">{description.length}/5000 characters</p>
+            <p className="text-xs font-dm mt-1" style={{ color: "var(--text-muted)" }}>{description.length}/5000 characters</p>
           </div>
           <div>
-            <label className="block text-sm font-medium text-slate-300 mb-1.5">Attachment (optional)</label>
+            <label className="block text-sm font-dm font-medium mb-1.5" style={{ color: "var(--text-body)" }}>Attachment (optional)</label>
             <div
-              className={`border-2 border-dashed rounded-lg p-6 text-center transition-colors cursor-pointer ${dragOver ? "border-primary-400 bg-primary-500/5" : "border-slate-600 hover:border-slate-500"}`}
+              className="rounded-2xl p-6 text-center transition-all cursor-pointer"
+              style={{
+                border: `2px dashed ${dragOver ? "var(--accent-primary)" : "rgba(255,255,255,0.30)"}`,
+                background: dragOver ? "rgba(168,197,160,0.08)" : "rgba(255,255,255,0.05)",
+              }}
               onDragOver={(e) => { e.preventDefault(); setDragOver(true); }}
               onDragLeave={() => setDragOver(false)}
               onDrop={handleDrop}
               onClick={() => document.getElementById("file-input")?.click()}
             >
-              <Upload className="w-8 h-8 text-slate-400 mx-auto mb-2" />
+              <Upload className="w-8 h-8 mx-auto mb-2" style={{ color: "var(--text-muted)" }} />
               {file ? (
-                <p className="text-sm text-slate-300">{file.name} ({(file.size / 1024 / 1024).toFixed(1)} MB)</p>
+                <p className="text-sm font-dm" style={{ color: "var(--text-body)" }}>{file.name} ({(file.size / 1024 / 1024).toFixed(1)} MB)</p>
               ) : (
-                <p className="text-sm text-slate-400">Drag & drop a file or click to browse (max 10MB)</p>
+                <p className="text-sm font-dm" style={{ color: "var(--text-muted)" }}>Drag & drop a file or click to browse (max 10MB)</p>
               )}
               <input id="file-input" type="file" className="hidden" onChange={(e) => e.target.files?.[0] && setFile(e.target.files[0])} />
             </div>
@@ -180,28 +202,28 @@ export default function SubmitComplaint() {
 
       {step === 2 && (
         <div className="glass-card p-6 space-y-5">
-          <h3 className="font-outfit font-semibold text-slate-200">Review Your Complaint</h3>
+          <h3 className="font-playfair font-bold" style={{ color: "var(--text-heading)" }}>Review Your Complaint</h3>
           <div className="space-y-3">
-            <div className="bg-dark-700/50 rounded-lg p-4">
-              <p className="text-xs text-slate-400 mb-1">Title</p>
-              <p className="text-slate-200">{title}</p>
-            </div>
-            {departmentId && (
-              <div className="bg-dark-700/50 rounded-lg p-4">
-                <p className="text-xs text-slate-400 mb-1">Target Department</p>
-                <p className="text-slate-200">
-                  {departmentId === "other" ? "Other (AI will decide)" : departments.find((d: any) => d.id === departmentId)?.name || "Unknown"}
-                </p>
+            {[
+              { label: "Title", value: title },
+              ...(departmentId ? [{
+                label: "Target Department",
+                value: departmentId === "other" ? "Other (AI will decide)" : departments.find((d: any) => d.id === departmentId)?.name || "Unknown"
+              }] : []),
+            ].map((item) => (
+              <div key={item.label} className="rounded-2xl p-4" style={{ background: "rgba(255,255,255,0.10)", border: "1px solid rgba(255,255,255,0.20)" }}>
+                <p className="text-xs font-mono uppercase tracking-wider mb-1" style={{ color: "var(--text-muted)" }}>{item.label}</p>
+                <p className="text-sm font-dm" style={{ color: "var(--text-body)" }}>{item.value}</p>
               </div>
-            )}
-            <div className="bg-dark-700/50 rounded-lg p-4">
-              <p className="text-xs text-slate-400 mb-1">Description</p>
-              <p className="text-slate-300 text-sm whitespace-pre-wrap">{description}</p>
+            ))}
+            <div className="rounded-2xl p-4" style={{ background: "rgba(255,255,255,0.10)", border: "1px solid rgba(255,255,255,0.20)" }}>
+              <p className="text-xs font-mono uppercase tracking-wider mb-1" style={{ color: "var(--text-muted)" }}>Description</p>
+              <p className="text-sm font-dm whitespace-pre-wrap" style={{ color: "var(--text-body)" }}>{description}</p>
             </div>
             {file && (
-              <div className="bg-dark-700/50 rounded-lg p-4">
-                <p className="text-xs text-slate-400 mb-1">Attachment</p>
-                <p className="text-slate-300 text-sm">{file.name}</p>
+              <div className="rounded-2xl p-4" style={{ background: "rgba(255,255,255,0.10)", border: "1px solid rgba(255,255,255,0.20)" }}>
+                <p className="text-xs font-mono uppercase tracking-wider mb-1" style={{ color: "var(--text-muted)" }}>Attachment</p>
+                <p className="text-sm font-dm" style={{ color: "var(--text-body)" }}>{file.name}</p>
               </div>
             )}
           </div>
@@ -211,7 +233,7 @@ export default function SubmitComplaint() {
             </button>
             <button onClick={handleSubmit} disabled={loading} className="btn-primary flex-1 flex items-center justify-center gap-2 disabled:opacity-50">
               {loading ? (
-                <><Loader2 className="w-4 h-4 animate-spin" /> <Sparkles className="w-4 h-4 text-purple-300" /> AI is analysing your complaint...</>
+                <><Loader2 className="w-4 h-4 animate-spin" /> <Sparkles className="w-4 h-4" style={{ color: "var(--accent-lavender)" }} /> AI is analysing your complaint...</>
               ) : (
                 "Submit Complaint"
               )}

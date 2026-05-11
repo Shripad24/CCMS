@@ -19,16 +19,21 @@ ReactDOM.createRoot(document.getElementById("root")!).render(
       <Toaster
         position="top-right"
         richColors
-        theme="dark"
+        theme="light"
         offset={100}
         toastOptions={{
           style: { 
-            background: "#1E293B", 
-            border: "1px solid #334155", 
-            color: "#F1F5F9",
-            fontSize: "1.1rem",
+            background: "rgba(255, 255, 255, 0.25)", 
+            backdropFilter: "blur(20px) saturate(180%)",
+            WebkitBackdropFilter: "blur(20px) saturate(180%)",
+            border: "1px solid rgba(255, 255, 255, 0.35)", 
+            borderRadius: "20px",
+            color: "#1a1a2e",
+            fontSize: "0.95rem",
+            fontFamily: "'DM Sans', sans-serif",
             padding: "16px 24px",
-            minWidth: "350px"
+            minWidth: "320px",
+            boxShadow: "0 8px 32px rgba(100,120,100,0.15)"
           },
         }}
       />

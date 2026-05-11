@@ -4,7 +4,7 @@ import { useAuthStore } from "@/store/authStore";
 import { complaintsApi } from "@/api/complaints";
 import { StatusBadge, PriorityBadge } from "@/components/shared/StatusBadge";
 import { SLACountdown } from "@/components/shared/SLACountdown";
-import { FileText, CheckCircle2, Clock, Star, Loader2, AlertTriangle } from "lucide-react";
+import { FileText, CheckCircle2, Clock, Star, Loader2, AlertTriangle, ArrowRight } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
 
 export default function StaffDashboard() {
@@ -33,68 +33,95 @@ export default function StaffDashboard() {
   const ratedComplaints = complaints.filter((c: any) => c.rating);
   const avgRating = ratedComplaints.length > 0
     ? (ratedComplaints.reduce((acc: number, c: any) => acc + c.rating.score, 0) / ratedComplaints.length).toFixed(1)
-    : "—";
+    : "\u2014";
 
   const metrics = [
-    { label: "Assigned", value: assigned, icon: FileText, color: "text-primary-400", bg: "bg-primary-500/10" },
-    { label: "In Progress", value: inProgress, icon: Clock, color: "text-amber-400", bg: "bg-amber-500/10" },
-    { label: "Resolved (Month)", value: resolvedThisMonth, icon: CheckCircle2, color: "text-emerald-400", bg: "bg-emerald-500/10" },
-    { label: "Avg Rating", value: avgRating, icon: Star, color: "text-yellow-400", bg: "bg-yellow-500/10" },
+    { label: "Assigned", value: assigned, icon: FileText, accent: "var(--accent-lavender)", bg: "rgba(196,184,232,0.15)" },
+    { label: "In Progress", value: inProgress, icon: Clock, accent: "var(--accent-gold)", bg: "rgba(240,208,128,0.15)" },
+    { label: "Resolved (Month)", value: resolvedThisMonth, icon: CheckCircle2, accent: "var(--accent-primary)", bg: "rgba(168,197,160,0.15)" },
+    { label: "Avg Rating", value: avgRating, icon: Star, accent: "var(--accent-peach)", bg: "rgba(242,196,160,0.15)" },
   ];
 
-  if (isLoading) return <div className="flex items-center justify-center h-64"><Loader2 className="w-8 h-8 text-primary-400 animate-spin" /></div>;
+  if (isLoading) return <div className="flex items-center justify-center h-64"><Loader2 className="w-8 h-8 animate-spin" style={{ color: "var(--accent-lavender)" }} /></div>;
 
   return (
-    <div className="space-y-6">
-      <h1 className="font-outfit text-2xl font-bold text-slate-100">Welcome, {user?.full_name?.split(" ")[0]}!</h1>
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+    <div className="space-y-8">
+      {/* Hero Card */}
+      <div className="glass-card p-8 lg:p-10 relative overflow-hidden slide-up">
+        <div className="flex items-center justify-between">
+          <div className="relative z-10">
+            <span className="inline-block px-3 py-1 rounded-full text-[10px] font-mono font-bold uppercase tracking-widest mb-4" style={{ background: "rgba(196,184,232,0.2)", color: "#7856b5", border: "1px solid rgba(196,184,232,0.3)" }}>Staff</span>
+            <h1 className="font-playfair text-3xl lg:text-4xl font-bold mb-2" style={{ color: "var(--text-heading)" }}>Welcome, <span className="gradient-text">{user?.full_name?.split(" ")[0]}</span></h1>
+            <p className="font-dm text-sm" style={{ color: "var(--text-muted)" }}>Manage assigned complaints and track performance</p>
+          </div>
+          <div className="hidden lg:block relative w-48 h-32">
+            <div className="absolute w-20 h-20 rounded-2xl rotate-12 right-4 top-0" style={{ background: "var(--accent-lavender)", opacity: 0.2 }} />
+            <div className="absolute w-16 h-16 rounded-2xl -rotate-6 right-16 top-8" style={{ background: "var(--accent-peach)", opacity: 0.25 }} />
+            <div className="absolute w-14 h-14 rounded-full right-0 bottom-0" style={{ background: "var(--accent-primary)", opacity: 0.2 }} />
+          </div>
+        </div>
+      </div>
+
+      {/* Stats */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
         {metrics.map((m, index) => (
-          <div key={m.label} className={`glass-card p-5 slide-up stagger-${index + 1}`}>
+          <div key={m.label} className={`glass-card p-6 slide-up stagger-${index + 1}`}>
             <div className="flex items-center justify-between">
-              <div><p className="text-sm text-slate-400">{m.label}</p><p className="text-2xl font-outfit font-bold text-slate-100 mt-1">{m.value}</p></div>
-              <div className={`w-10 h-10 ${m.bg} rounded-lg flex items-center justify-center`}><m.icon className={`w-5 h-5 ${m.color}`} /></div>
+              <div>
+                <p className="text-xs font-dm font-medium uppercase tracking-wider" style={{ color: "var(--text-muted)" }}>{m.label}</p>
+                <p className="text-3xl font-playfair font-bold mt-2" style={{ color: "var(--text-heading)" }}>{m.value}</p>
+              </div>
+              <div className="w-12 h-12 rounded-2xl flex items-center justify-center" style={{ background: m.bg }}>
+                <m.icon className="w-6 h-6" style={{ color: m.accent }} />
+              </div>
             </div>
+            <div className="absolute left-0 top-6 bottom-6 w-[3px] rounded-full" style={{ background: m.accent }} />
           </div>
         ))}
       </div>
 
+      {/* Urgent SLA */}
       {urgentComplaints.length > 0 && (
-        <div className="glass-card p-4 border-red-500/30">
-          <div className="flex items-center gap-2 mb-3"><AlertTriangle className="w-5 h-5 text-red-400" /><h3 className="font-medium text-red-400">Urgent — SLA Approaching</h3></div>
+        <div className="glass-card p-5 slide-up" style={{ borderLeft: "3px solid var(--accent-rose)" }}>
+          <div className="flex items-center gap-2 mb-4">
+            <AlertTriangle className="w-5 h-5" style={{ color: "var(--accent-rose)" }} />
+            <h3 className="font-playfair font-bold" style={{ color: "var(--text-heading)" }}>Urgent — SLA Approaching</h3>
+          </div>
           {urgentComplaints.map((c: any) => (
-            <div key={c.id} onClick={() => navigate(`/staff/complaints/${c.id}`)} className="flex items-center justify-between py-2 border-b border-slate-700/30 last:border-0 cursor-pointer hover:bg-dark-700/30 px-2 rounded">
-              <div><span className="text-sm text-slate-300 font-mono">{c.reference_no}</span> <span className="text-sm text-slate-400 ml-2">{c.title}</span></div>
+            <div key={c.id} onClick={() => navigate(`/staff/complaints/${c.id}`)} className="flex items-center justify-between py-3 cursor-pointer rounded-xl px-3 transition-colors hover:bg-white/10" style={{ borderBottom: "1px solid rgba(255,255,255,0.10)" }}>
+              <div><span className="font-mono text-xs mr-2" style={{ color: "var(--text-muted)" }}>{c.reference_no}</span><span className="text-sm font-dm" style={{ color: "var(--text-body)" }}>{c.title}</span></div>
               <SLACountdown deadline={c.sla_deadline} warningSent={true} status={c.status} resolvedAt={c.resolved_at} />
             </div>
           ))}
         </div>
       )}
 
-      <div className="glass-card overflow-hidden">
-        <div className="p-4 border-b border-slate-700/50 flex items-center justify-between">
-          <h3 className="font-outfit font-semibold text-slate-200">Recent Assigned Complaints</h3>
-          <button onClick={() => navigate("/staff/complaints")} className="text-sm text-primary-400 hover:text-primary-300">View all</button>
+      {/* Table */}
+      <div className="glass-card overflow-hidden p-0">
+        <div className="p-5 flex items-center justify-between" style={{ borderBottom: "1px solid rgba(255,255,255,0.20)" }}>
+          <h3 className="font-playfair font-bold" style={{ color: "var(--text-heading)" }}>Recent Assigned Complaints</h3>
+          <button onClick={() => navigate("/staff/complaints")} className="text-sm font-dm font-medium flex items-center gap-1" style={{ color: "var(--accent-lavender)" }}>View all <ArrowRight className="w-3.5 h-3.5" /></button>
         </div>
         <div className="overflow-x-auto">
           <table className="w-full">
-            <thead><tr className="border-b border-slate-700/50">
-              <th className="text-left px-4 py-3 text-xs font-medium text-slate-400 uppercase">Reference</th>
-              <th className="text-left px-4 py-3 text-xs font-medium text-slate-400 uppercase">Title</th>
-              <th className="text-left px-4 py-3 text-xs font-medium text-slate-400 uppercase">Status</th>
-              <th className="text-left px-4 py-3 text-xs font-medium text-slate-400 uppercase">Priority</th>
-              <th className="text-left px-4 py-3 text-xs font-medium text-slate-400 uppercase">SLA</th>
+            <thead><tr style={{ borderBottom: "1px solid rgba(255,255,255,0.15)" }}>
+              <th className="text-left px-5 py-3.5">Reference</th>
+              <th className="text-left px-5 py-3.5">Title</th>
+              <th className="text-left px-5 py-3.5">Status</th>
+              <th className="text-left px-5 py-3.5">Priority</th>
+              <th className="text-left px-5 py-3.5">SLA</th>
             </tr></thead>
             <tbody>
-              {complaints.slice(0, 5).map((c: any) => (
-                <tr key={c.id} onClick={() => navigate(`/staff/complaints/${c.id}`)} className="border-b border-slate-700/20 hover:bg-dark-700/50 cursor-pointer transition-colors">
-                  <td className="px-4 py-3 text-sm font-mono text-slate-300">{c.reference_no}</td>
-                  <td className="px-4 py-3 text-sm text-slate-200 truncate max-w-[200px]">{c.title}</td>
-                  <td className="px-4 py-3"><StatusBadge status={c.status} /></td>
-                  <td className="px-4 py-3"><PriorityBadge priority={c.priority} /></td>
-                  <td className="px-4 py-3"><SLACountdown deadline={c.sla_deadline} warningSent={c.sla_warning_sent} status={c.status} resolvedAt={c.resolved_at} /></td>
+              {complaints.slice(0, 5).map((c: any, i: number) => (
+                <tr key={c.id} onClick={() => navigate(`/staff/complaints/${c.id}`)} className="cursor-pointer transition-colors" style={{ borderBottom: "1px solid rgba(255,255,255,0.10)", background: i % 2 === 0 ? "rgba(255,255,255,0.03)" : "transparent" }}>
+                  <td className="px-5 py-3.5 text-sm font-mono" style={{ color: "var(--text-muted)" }}>{c.reference_no}</td>
+                  <td className="px-5 py-3.5 text-sm font-dm truncate max-w-[200px]" style={{ color: "var(--text-body)" }}>{c.title}</td>
+                  <td className="px-5 py-3.5"><StatusBadge status={c.status} /></td>
+                  <td className="px-5 py-3.5"><PriorityBadge priority={c.priority} /></td>
+                  <td className="px-5 py-3.5"><SLACountdown deadline={c.sla_deadline} warningSent={c.sla_warning_sent} status={c.status} resolvedAt={c.resolved_at} /></td>
                 </tr>
               ))}
-              {complaints.length === 0 && <tr><td colSpan={5} className="px-4 py-8 text-center text-slate-500">No assigned complaints</td></tr>}
+              {complaints.length === 0 && <tr><td colSpan={5} className="px-5 py-10 text-center font-dm" style={{ color: "var(--text-muted)" }}>No assigned complaints</td></tr>}
             </tbody>
           </table>
         </div>

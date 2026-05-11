@@ -72,17 +72,20 @@ export function SLACountdown({ deadline, warningSent, status, resolvedAt }: SLAC
     return () => clearInterval(interval);
   }, [deadline, warningSent, status, resolvedAt]);
 
-  if (!deadline) return <span className="text-xs text-slate-500">No SLA</span>;
+  if (!deadline) return <span className="text-xs font-mono" style={{ color: "var(--text-muted)" }}>No SLA</span>;
 
   const colors = {
-    normal: "text-emerald-400",
-    warning: "text-amber-400",
-    breached: "text-red-400",
-    completed: "text-blue-400",
+    normal: "#4d6548",
+    warning: "#a06418",
+    breached: "#c96068",
+    completed: "#5f7d58",
   };
 
   return (
-    <span className={`inline-flex items-center gap-1 text-xs font-medium ${colors[urgency]}`}>
+    <span
+      className="inline-flex items-center gap-1 text-xs font-mono font-medium"
+      style={{ color: colors[urgency] }}
+    >
       {urgency === "completed" ? <CheckCircle2 className="w-3 h-3" /> :
        urgency === "breached" && status !== "RESOLVED" && status !== "CLOSED" ? <AlertTriangle className="w-3 h-3" /> : 
        <Clock className="w-3 h-3" />}

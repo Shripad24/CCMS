@@ -1,0 +1,94 @@
+Integrated Campus Medical Facility & Patient Management System
+A Full -Stack MERN Application for Smart Campus Healthcare AdministrationAtul Yadav | Roll No: 2201041
+IIIT Guwahati | CS410 Project
+◆Summary / Abstract
+ The Integrated Campus Medical Facility & Patient 
+Management  .System is a full -stack MERN web application that 
+digitizes campus healthcare services. It replaces manual dispensary 
+workflows with a secure role -based platform for managing 
+appointments, health records, prescriptions, medicine inventory, 
+emergency alerts, and notifications, improving accessibility, 
+transparency, security, and operational efficiency.
+Problem Solved
+Paper -based medical records are hard to search, update, audit, and protect.
+• Manual medicine stock tracking can cause shortage, expiry, and mismatch issues.
+• Students do not get quick visibility of appointments, prescriptions, and health 
+history.
+• Emergency communication through notice boards or informal chats is slow and 
+unreliable.
+• Dispensary staff spend extra time on repeated administrative work instead of 
+patient care.
+Objective / Key Goals
+To develop a secure, scalable, and role -based healthcare platform that 
+modernizes campus dispensary operations through centralized digital 
+records, automated inventory tracking, and structured communication.
+Key Goals:
+• Separate dashboards for Student, Doctor, Staff, and Admin.
+• Digitize health records, appointments, prescriptions, medicines, and 
+notifications.
+• Use secure authentication and role -based authorization.
+• Provide faster emergency alert delivery and real -time updates.
+• Build a maintainable architecture that can be extended for mobile app, 
+analytics, and telemedicine.
+Student
+ Doctor
+ Staff
+ Admin
+Method / Approach
+The system follows a MERN -based three -tier architecture for better scalability, 
+maintainability, and security.
+Frontend Layer:
+React.js, Vite, Tailwind CSS, React Router, Context API, and Axios provide 
+responsive role -based interfaces.
+Backend Layer:
+Node.js and Express.js expose REST APIs for auth, facilities, medicines, 
+hospitals, notifications, gallery, history, appointments, emergency alerts, and 
+admin operations.
+▣System Architecture
+React.js Frontend  •  Role -based dashboards
+Node.js + Express APIs  •  Business logic + routes
+JWT + RBAC Security  •  Protected communication
+MongoDB Atlas  •  Users, records, medicines, alerts
+Database Layer:
+MongoDB Atlas stores users, health records, appointments, medicines, 
+notifications, gallery data, and admin -related records. Mongoose handles 
+connectivity and schema management.
+Security Approach
+JWT: Auth
+ bcrypt: Hashing
+RBAC: Access
+CORS: API
+ Nodemailer: Email
+✓Results / Findings
+The project delivers a production -ready, role -based campus healthcare 
+platform with secure login, OTP verification, digital health records, 
+prescriptions, inventory tracking, appointments, nearby hospitals, emergency 
+alerts, notifications, admin analytics, and gallery management.
+Its modular REST API backend centralizes all dispensary workflows into one 
+secure, maintainable, scalable, and easy -to-extend digital system.
+★Key Outcomes
+• Complete MERN full -stack healthcare platform
+• Secure multi -role access for Student, Staff, Doctor, Admin
+• Digitized records, prescriptions, inventory, alerts and notifications
+• Reduced paperwork and improved operational transparency
+• Scalable architecture for future deployment
+4 User
+Roles
+8+ 
+ApiModules
+ Secure Auth
+Alert 
+Emergency
+Conclusion  / Significance
+Health
+Records
+Medicine
+Inventory
+Admin
+Analytics
+Indian Institute of Information Technology Guwahati  |  Department of Computer Science and Engineering1.ICMFMS uses modern full -stack engineering to digitize campus healthcare 
+through role -based dashboards, secure authentication, medical records, 
+inventory tracking, alerts, notifications, and admin visibility.
+2.It improves speed, reliability, transparency, and accessibility while 
+remaining practical, scalable, secure, and ready for future AI, mobile, 
+telemedicine, analytics, and cloud extensions.

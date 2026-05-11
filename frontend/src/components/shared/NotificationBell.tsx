@@ -61,39 +61,77 @@ export function NotificationBell() {
 
   return (
     <div className="relative" ref={ref}>
-      <button onClick={() => setOpen(!open)} className="relative p-2 rounded-lg hover:bg-dark-700 transition-colors" id="notification-bell">
-        <Bell className="w-5 h-5 text-slate-300" />
+      <button
+        onClick={() => setOpen(!open)}
+        className="relative p-2.5 rounded-2xl transition-all duration-200 hover:bg-white/10"
+        id="notification-bell"
+      >
+        <Bell className="w-5 h-5" style={{ color: "var(--text-muted)" }} />
         {unreadCount > 0 && (
-          <span className="absolute -top-0.5 -right-0.5 w-5 h-5 bg-danger rounded-full flex items-center justify-center text-[10px] font-bold text-white animate-pulse">
+          <span
+            className="absolute -top-0.5 -right-0.5 w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-bold text-white animate-pulse"
+            style={{
+              background: "linear-gradient(135deg, var(--accent-rose), #c96068)",
+              boxShadow: "0 0 8px rgba(232,180,184,0.5)",
+            }}
+          >
             {unreadCount > 9 ? "9+" : unreadCount}
           </span>
         )}
       </button>
 
       {open && (
-        <div className="absolute right-0 mt-2 w-80 bg-dark-800 border border-slate-700 rounded-xl shadow-2xl z-50 overflow-hidden">
-          <div className="flex items-center justify-between p-3 border-b border-slate-700">
-            <span className="font-medium text-sm text-slate-200">Notifications</span>
+        <div
+          className="absolute right-0 mt-2 w-80 rounded-3xl z-50 overflow-hidden glass-card p-0"
+          style={{
+            background: "var(--bg-base)",
+            border: "1px solid var(--glass-border)",
+            boxShadow: "var(--shadow-soft)",
+          }}
+        >
+          <div
+            className="flex items-center justify-between p-4"
+            style={{ borderBottom: "1px solid var(--divider)" }}
+          >
+            <span className="font-playfair font-bold text-sm" style={{ color: "var(--text-heading)" }}>
+              Notifications
+            </span>
             {unreadCount > 0 && (
-              <button onClick={handleMarkAllRead} className="text-xs text-primary-400 hover:text-primary-300 transition-colors">
+              <button
+                onClick={handleMarkAllRead}
+                className="text-xs font-dm font-medium transition-colors"
+                style={{ color: "var(--accent-primary)" }}
+              >
                 Mark all read
               </button>
             )}
           </div>
           <div className="max-h-80 overflow-y-auto">
             {notifications.length === 0 ? (
-              <p className="p-4 text-center text-sm text-slate-500">No notifications</p>
+              <p className="p-5 text-center text-sm font-dm" style={{ color: "var(--text-muted)" }}>
+                No notifications
+              </p>
             ) : (
               notifications.slice(0, 5).map((notif) => (
                 <button
                   key={notif.id}
                   onClick={() => handleClick(notif)}
-                  className={`w-full text-left p-3 border-b border-slate-700/50 hover:bg-dark-700 transition-colors ${!notif.is_read ? "bg-primary-500/5" : ""}`}
+                  className="w-full text-left p-4 transition-colors"
+                  style={{
+                    borderBottom: "1px solid var(--divider)",
+                    background: !notif.is_read ? "var(--glass-card-bg-hover)" : "transparent",
+                  }}
                 >
-                  <p className={`text-sm ${!notif.is_read ? "text-slate-200 font-medium" : "text-slate-400"}`}>
+                  <p
+                    className="text-sm font-dm"
+                    style={{
+                      color: !notif.is_read ? "var(--text-heading)" : "var(--text-muted)",
+                      fontWeight: !notif.is_read ? 600 : 400,
+                    }}
+                  >
                     {notif.message}
                   </p>
-                  <p className="text-xs text-slate-500 mt-1">
+                  <p className="text-xs font-mono mt-1" style={{ color: "var(--text-muted)", opacity: 0.7 }}>
                     {formatDistanceToNow(new Date(notif.created_at), { addSuffix: true })}
                   </p>
                 </button>

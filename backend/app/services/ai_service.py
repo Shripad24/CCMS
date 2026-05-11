@@ -10,9 +10,12 @@ from app.config import settings
 
 logger = logging.getLogger(__name__)
 
-# Configure Gemini
+# Configure Gemini — re-reads API key from .env on each server reload
 if settings.GEMINI_API_KEY:
     genai.configure(api_key=settings.GEMINI_API_KEY)
+    logger.info(f"Gemini configured with API key: {settings.GEMINI_API_KEY[:8]}...")
+else:
+    logger.warning("GEMINI_API_KEY is not set in .env!")
 
 # Models to try in order — gemini-1.5-flash was REMOVED from the API.
 # We use gemini-2.0-flash as primary, with fallbacks.

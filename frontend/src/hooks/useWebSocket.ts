@@ -17,7 +17,10 @@ export function useWebSocket() {
     if (wsRef.current?.readyState === WebSocket.OPEN) return;
 
     const protocol = window.location.protocol === "https:" ? "wss:" : "ws:";
-    const wsUrl = `${protocol}//${window.location.host}/ws?token=${accessToken}`;
+    const defaultWsUrl = `${protocol}//${window.location.host}/ws?token=${accessToken}`;
+    const wsUrl = import.meta.env.VITE_WS_URL 
+      ? `${import.meta.env.VITE_WS_URL}?token=${accessToken}`
+      : defaultWsUrl;
 
     try {
       const ws = new WebSocket(wsUrl);
