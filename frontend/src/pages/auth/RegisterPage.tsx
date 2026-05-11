@@ -53,8 +53,8 @@ export default function RegisterPage() {
             Registration Successful!
           </h2>
           <p className="font-dm text-sm mb-6" style={{ color: "var(--text-muted)" }}>
-            {form.role === "STAFF" 
-              ? "Your account has been created. Since you registered as Staff, an Admin must approve your account before you can log in." 
+            {form.role === "STAFF"
+              ? "Your account has been created. Since you registered as Staff, an Admin must approve your account before you can log in."
               : "Your account has been created. You can now log in with your credentials."}
           </p>
           <Link to="/login" className="btn-primary inline-block">Go to Login</Link>
